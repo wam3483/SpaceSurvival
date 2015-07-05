@@ -1,0 +1,30 @@
+
+pack.png
+size: 512,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+button
+  rotate: false
+  xy: 208, 54
+  size: 50, 50
+  split: 24, 25, 28, 21
+  orig: 50, 50
+  offset: 0, 0
+  index: -1
+dialogbg
+  rotate: false
+  xy: 2, 2
+  size: 102, 102
+  orig: 102, 102
+  offset: 0, 0
+  index: -1
+metalframe
+  rotate: false
+  xy: 106, 4
+  size: 100, 100
+  split: 34, 35, 56, 43
+  pad: 35, 36, 56, 43
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
