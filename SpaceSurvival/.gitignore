@@ -31,8 +31,8 @@ com_crashlytics_export_strings.xml
 
 ## Eclipse
 .classpath
-.metadata
 .project
+.metadata
 **/bin/
 tmp/
 *.tmp
