@@ -3,6 +3,7 @@ package maxfat.spacesurvival.screens;
 import maxfat.graph.I2DData;
 import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
 
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -34,6 +35,10 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		@Override
 		public void zoom(float increment) {
+		}
+
+		@Override
+		public void onExitRequested() {
 		}
 	};
 
@@ -75,6 +80,9 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		@Override
 		public boolean keyDown(int keycode) {
+			if (keycode == Keys.ESCAPE) {
+				listener.onExitRequested();
+			}
 			return false;
 		}
 
@@ -156,5 +164,7 @@ public class GameScreenInputManager extends InputMultiplexer {
 		void viewportDrag(Vector2 v);
 
 		void zoom(float increment);
+
+		void onExitRequested();
 	}
 }

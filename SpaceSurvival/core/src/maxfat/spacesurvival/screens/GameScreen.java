@@ -4,18 +4,17 @@ import maxfat.graph.Graph;
 import maxfat.graph.PlanetData;
 import maxfat.spacesurvival.gamesystem.PlayerComponent;
 import maxfat.spacesurvival.gamesystem.PlayerQuery;
+import maxfat.spacesurvival.overlap2d.DialogBuilder;
+import maxfat.spacesurvival.overlap2d.DialogBuilder.IYesNoListener;
 import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
 import maxfat.util.random.RandomUtil;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.uwsoft.editor.renderer.SceneLoader;
 import com.uwsoft.editor.renderer.actor.CompositeItem;
 
 public class GameScreen implements Screen {
@@ -26,6 +25,7 @@ public class GameScreen implements Screen {
 	ViewController gameView;
 
 	PlayerQuery player;
+	DialogBuilder dialogBuilder;
 	Stage uiStage;
 
 	public GameScreen(Graph<PlanetData> graph) {
@@ -43,21 +43,8 @@ public class GameScreen implements Screen {
 		this.inputManager = new GameScreenInputManager(this.gameState,
 				this.viewport);
 		this.inputManager.listener = inputListener;
+		this.dialogBuilder = new DialogBuilder(this.uiStage);
 		Gdx.input.setInputProcessor(this.inputManager);
-		loadDialogs();
-	}
-
-	void loadDialogs() {
-		SceneLoader sceneLoader = new SceneLoader(GameConstants.ScreenWidth
-				+ "x" + GameConstants.ScreenHeight);
-		sceneLoader.loadScene("MainScene");
-		CompositeItem sceneRoot = sceneLoader.getRoot();
-		sceneRoot.setColor(Color.RED);
-		Vector3 pos = this.uiStage.getCamera().position;
-		float x = (pos.x - sceneRoot.getWidth() / 2);
-		float y = (pos.y - sceneRoot.getHeight() / 2);
-		sceneRoot.setPosition(x, y);
-		this.uiStage.addActor(sceneRoot);
 	}
 
 	GameScreenInputManager.IGameUIListener inputListener = new GameScreenInputManager.IGameUIListener() {
@@ -83,6 +70,27 @@ public class GameScreen implements Screen {
 				// option to remotely scan planet.
 			}
 		}
+
+		@Override
+		public void onExitRequested() {
+			CompositeItem exitDialog = dialogBuilder
+					.getExitDialog(new IYesNoListener() {
+						@Override
+						public void yesPressed(CompositeItem dialog) {
+							dialog.dispose();
+							Gdx.app.exit();
+						}
+
+						@Override
+						public void noPressed(CompositeItem dialog) {
+							dialog.remove();
+							dialog.dispose();
+							Gdx.input.setInputProcessor(inputManager);
+						}
+					});
+			uiStage.addActor(exitDialog);
+			Gdx.input.setInputProcessor(uiStage);
+		}
 	};
 
 	@Override
@@ -105,6 +113,7 @@ public class GameScreen implements Screen {
 	@Override
 	public void resize(int width, int height) {
 		this.viewport.update(width, height);
+		this.uiStage.getViewport().update(width, height);
 	}
 
 	@Override
