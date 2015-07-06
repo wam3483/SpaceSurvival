@@ -6,6 +6,7 @@ import maxfat.spacesurvival.gamesystem.PlayerComponent;
 import maxfat.spacesurvival.gamesystem.PlayerQuery;
 import maxfat.spacesurvival.overlap2d.DialogBuilder;
 import maxfat.spacesurvival.overlap2d.DialogBuilder.IYesNoListener;
+import maxfat.spacesurvival.overlap2d.StageStack;
 import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
 import maxfat.util.random.RandomUtil;
 
@@ -27,6 +28,7 @@ public class GameScreen implements Screen {
 	PlayerQuery player;
 	DialogBuilder dialogBuilder;
 	Stage uiStage;
+	StageStack stageStack;
 
 	public GameScreen(Graph<PlanetData> graph) {
 		this.uiStage = new Stage(new FitViewport(GameConstants.ScreenWidth,
@@ -44,7 +46,9 @@ public class GameScreen implements Screen {
 				this.viewport);
 		this.inputManager.listener = inputListener;
 		this.dialogBuilder = new DialogBuilder(this.uiStage);
-		Gdx.input.setInputProcessor(this.inputManager);
+		this.stageStack = new StageStack();
+		this.stageStack.push(new StageStack.StageWrapper(null,
+				this.inputManager));
 	}
 
 	GameScreenInputManager.IGameUIListener inputListener = new GameScreenInputManager.IGameUIListener() {
@@ -85,11 +89,11 @@ public class GameScreen implements Screen {
 						public void noPressed(CompositeItem dialog) {
 							dialog.remove();
 							dialog.dispose();
-							Gdx.input.setInputProcessor(inputManager);
+							stageStack.pop();
 						}
 					});
 			uiStage.addActor(exitDialog);
-			Gdx.input.setInputProcessor(uiStage);
+			stageStack.push(uiStage);
 		}
 	};
 
