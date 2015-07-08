@@ -8,40 +8,49 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class StageStack {
 	private final Stack<StageWrapper> stack;
-	private StageWrapper currentWrapper;
 
 	public StageStack() {
 		this.stack = new Stack<StageWrapper>();
 	}
 
 	public void render(float delta) {
-		if (this.currentWrapper.stage != null) {
-			Stage stage = this.currentWrapper.stage;
+		StageWrapper wrapper = this.stack.peek();
+		if (wrapper != null && wrapper.stage != null) {
+			Stage stage = wrapper.stage;
 			stage.act(delta);
 			stage.draw();
 		}
 	}
 
 	public void push(Stage stage) {
+		if (stage == null)
+			throw new NullPointerException("stage");
 		this.push(new StageWrapper(stage, stage));
 	}
 
-	public void push(StageWrapper inputProcessor) {
-		this.stack.add(this.currentWrapper);
-		this.currentWrapper = inputProcessor;
-		Gdx.input.setInputProcessor(this.currentWrapper.inputProcessor);
+	public void push(StageWrapper stageWrapper) {
+		if (stageWrapper == null)
+			throw new NullPointerException("stageWrapper");
+		this.stack.push(stageWrapper);
+		Gdx.input.setInputProcessor(stageWrapper.inputProcessor);
 	}
 
 	public void resize(int width, int height) {
 		for (StageWrapper s : this.stack) {
-			s.stage.getViewport().update(width, height);
+			if (s.stage != null) {
+				s.stage.getViewport().update(width, height);
+			}
 		}
 	}
 
 	public void pop() {
-		StageWrapper p = this.stack.pop();
-		Gdx.input.setInputProcessor(p.inputProcessor);
-		this.currentWrapper = p;
+		this.stack.pop();
+		StageWrapper next = this.stack.peek();
+		if (next != null) {
+			Gdx.input.setInputProcessor(next.inputProcessor);
+		} else {
+			Gdx.input.setInputProcessor(null);
+		}
 	}
 
 	public static class StageWrapper {
@@ -54,5 +63,14 @@ public class StageStack {
 			this.stage = stage;
 			this.inputProcessor = processor;
 		}
+	}
+
+	public void dispose() {
+		for (StageWrapper wrapper : this.stack) {
+			if (wrapper.stage != null) {
+				wrapper.stage.dispose();
+			}
+		}
+		this.stack.clear();
 	}
 }

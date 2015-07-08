@@ -1,1 +1,1 @@
-{"originalResolution":{"name":"orig","width":800,"height":480},"scenes":[{"sceneName":"MainScene","physicsPropertiesVO":{}},{"sceneName":"YesNoDialog","physicsPropertiesVO":{}}]}
+{"originalResolution":{"name":"orig","width":800,"height":480},"scenes":[{"sceneName":"MainScene","physicsPropertiesVO":{}},{"sceneName":"YesNoDialog","physicsPropertiesVO":{}},{"sceneName":"PlanetManagementDialog","physicsPropertiesVO":{}}]}
