@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -17,7 +19,7 @@ import com.uwsoft.editor.renderer.actor.IBaseItem;
 import com.uwsoft.editor.renderer.actor.LabelItem;
 
 public class GameDialogs {
-	private final StageStack stack;
+	private final StageStack displayStack;
 	private final Viewport viewport;
 	private final Batch batch;
 	private final SceneLoader sceneLoader;
@@ -25,7 +27,7 @@ public class GameDialogs {
 	float dialogAnimationSpeed = .5f;
 
 	public GameDialogs(StageStack stack, Viewport viewport, Batch batch) {
-		this.stack = stack;
+		this.displayStack = stack;
 		this.viewport = viewport;
 		this.batch = batch;
 		this.sceneLoader = new SceneLoader();
@@ -65,12 +67,65 @@ public class GameDialogs {
 				Interpolation.swingOut));
 	}
 
-	private void addOutAnimation(CompositeItem root, Action after1,
-			Action after2) {
-		root.setOrigin(root.getWidth() / 2, root.getHeight() / 2);
-		root.setScale(1, 1);
-		root.addAction(Actions.sequence(Actions.scaleTo(.1f, .1f,
-				dialogAnimationSpeed, Interpolation.swingIn), after1, after2));
+	private Action getDialogCloseAnimation() {
+		return Actions.sequence(//
+				Actions.scaleTo(1, 1),//
+				Actions.scaleTo(.1f, .1f, dialogAnimationSpeed,
+						Interpolation.swingIn));
+	}
+
+	// TODO need some planet data to render in correct position
+	public void showUnknownPlanetDialog(final Runnable scanPlanetCallback,
+			final ICallback<IDialog> capturePlanetCallback) {
+		this.sceneLoader.loadScene("UnknownPlanetDialog");
+		final CompositeItem root = sceneLoader.getRoot();
+		ArrayList<IBaseItem> allItems = root.getItems();
+
+		final Stage stage = new Stage(this.viewport, this.batch);
+
+		CompositeItem planetPlaceholder = (CompositeItem) findItemByIdentifier(
+				"planetPlaceholder", allItems);
+		float x = planetPlaceholder.getX();
+		float y = planetPlaceholder.getY();
+		int zIndex = planetPlaceholder.getZIndex();
+		float width = planetPlaceholder.getWidth();
+		float height = planetPlaceholder.getHeight();
+		Group group = planetPlaceholder.getParent();
+		group.removeActor(planetPlaceholder);
+
+		Actor planetRenderer = new Actor();
+		planetRenderer.setBounds(x, y, width, height);
+		planetRenderer.setZIndex(zIndex);
+		group.addActor(planetRenderer);
+
+		CompositeItem btnScan = (CompositeItem) findItemByIdentifier("btnScan",
+				allItems);
+		Action closeAnimation = getDialogCloseAnimation();
+		Action scanAction = Actions.sequence(closeAnimation,
+				new DialogDisposeAndCallback(stage, scanPlanetCallback));
+		btnScan.addListener(new CloseDialogClickListener(root, scanAction));
+
+		CompositeItem btnCapture = (CompositeItem) findItemByIdentifier(
+				"btnCapturePlanet", allItems);
+		btnCapture.addListener(new ClickListener() {
+			@Override
+			public void touchUp(InputEvent event, float x, float y,
+					int pointer, int button) {
+				Action closeAction = new DialogDisposeAndCallback(stage, null);
+				capturePlanetCallback.callback(new CompositeItemDialog(root,
+						closeAction));
+			}
+		});
+
+		pushDialog(stage, root);
+	}
+
+	private void pushDialog(Stage stage, CompositeItem root) {
+		centerItemInStage(stage, root);
+		this.addInAnimation(root);
+		stage.addActor(root);
+
+		this.displayStack.push(stage);
 	}
 
 	public void showYesNoDialog(String message, String yes, String no,
@@ -81,77 +136,99 @@ public class GameDialogs {
 		SimpleButtonScript yesNoScript = new SimpleButtonScript();
 		root.addScriptTo("SimpleButton", yesNoScript);
 
+		root.setOrigin(root.getWidth() / 2, root.getHeight() / 2);
+		Action closeAnimation = Actions
+				.sequence(Actions.scaleTo(1, 1), Actions.scaleTo(.1f, .1f,
+						dialogAnimationSpeed, Interpolation.swingIn));
+
+		// animate dialog, dispose stage, then do callback for button press
+		Action yesCloseAction = Actions.sequence(closeAnimation,
+				new DialogDisposeAndCallback(stage, yesRun));
+		Action noCloseAction = Actions.sequence(closeAnimation,
+				new DialogDisposeAndCallback(stage, noRun));
+
 		ArrayList<IBaseItem> allItems = root.getItems();
 		CompositeItem btnYes = (CompositeItem) findItemByIdentifier("btnYes",
 				allItems);
-
-		// Must be last action executed because it removes stage from stack,
-		// Stage then can no longer be updated and can't execute further
-		// actions.
-		final Action lastAction = new Action() {
-			@Override
-			public boolean act(float delta) {
-				stack.pop();
-				stage.dispose();
-				return true;
-			}
-		};
-		btnYes.addListener(new ClickListener() {
-			public void touchUp(InputEvent event, float x, float y,
-					int pointer, int button) {
-				root.clearActions();
-				addOutAnimation(root, new RunAction(yesRun), lastAction);
-			}
-		});
-		LabelItem lblYes = btnYes.getLabelById("text");
-		lblYes.setText(yes);
+		btnYes.addListener(new CloseDialogClickListener(root, yesCloseAction));
 
 		CompositeItem btnNo = (CompositeItem) findItemByIdentifier("btnNo",
 				allItems);
-		btnNo.addListener(new ClickListener() {
-			public void touchUp(InputEvent event, float x, float y,
-					int pointer, int button) {
-				root.clearActions();
-				addOutAnimation(root, new RunAction(noRun), lastAction);
-			}
-		});
+		btnNo.addListener(new CloseDialogClickListener(root, noCloseAction));
+
+		LabelItem lblYes = btnYes.getLabelById("text");
+		lblYes.setText(yes);
 		LabelItem lblNo = btnNo.getLabelById("text");
 		lblNo.setText(no);
-
 		LabelItem lblMessage = (LabelItem) findItemByIdentifier("lblMessage",
 				allItems);
 		lblMessage.setText(message);
 
-		centerItemInStage(stage, root);
-
-		this.addInAnimation(root);
-		stage.addActor(root);
-		this.stack.push(stage);
+		pushDialog(stage, root);
 	}
 
 	public void render(float delta) {
-		this.stack.render(delta);
+		this.displayStack.render(delta);
 	}
 
 	public void update(int width, int height) {
-		this.stack.resize(width, height);
+		this.displayStack.resize(width, height);
 	}
 
 	public void dispose() {
-		this.stack.dispose();
+		this.displayStack.dispose();
 	}
 
-	private class RunAction extends Action {
-		Runnable run;
+	private static class CloseDialogClickListener extends ClickListener {
+		private CompositeItem dialog;
+		private Action closeAction;
 
-		public RunAction(Runnable run) {
-			this.run = run;
+		public CloseDialogClickListener(CompositeItem dialog, Action closeAction) {
+			this.dialog = dialog;
+			this.closeAction = closeAction;
+		}
+
+		@Override
+		public void touchUp(InputEvent event, float x, float y, int pointer,
+				int button) {
+			this.dialog.clearActions();
+			this.dialog.addAction(closeAction);
+		}
+	};
+
+	public class CompositeItemDialog implements IDialog {
+		CompositeItem dialog;
+		Action closeAction;
+
+		public CompositeItemDialog(CompositeItem dialog, Action closeAction) {
+			this.dialog = dialog;
+			this.closeAction = closeAction;
+		}
+
+		public void close() {
+			this.dialog.addAction(closeAction);
+		}
+	}
+
+	public static interface IDialog {
+		void close();
+	}
+
+	private class DialogDisposeAndCallback extends Action {
+		Stage stage;
+		Runnable callback;
+
+		public DialogDisposeAndCallback(Stage stage, Runnable callback) {
+			this.stage = stage;
+			this.callback = callback;
 		}
 
 		@Override
 		public boolean act(float delta) {
-			if (this.run != null)
-				this.run.run();
+			displayStack.pop();
+			stage.dispose();
+			if (this.callback != null)
+				this.callback.run();
 			return true;
 		}
 	}

@@ -14,11 +14,18 @@ public class StageStack {
 	}
 
 	public void render(float delta) {
-		StageWrapper wrapper = this.stack.peek();
-		if (wrapper != null && wrapper.stage != null) {
-			Stage stage = wrapper.stage;
-			stage.act(delta);
-			stage.draw();
+		for (int i = 0; i < stack.size(); i++) {
+			StageWrapper wrapper = stack.get(i);
+			if (wrapper.stage != null) {
+				Stage stage = wrapper.stage;
+				// top item.
+				if (i == stack.size() - 1) {
+					// TODO render black translucent overlay to darken
+					// underlying stages.
+				}
+				stage.act(delta);
+				stage.draw();
+			}
 		}
 	}
 
