@@ -14,7 +14,7 @@ brightScrewPanel
   index: -1
 button
   rotate: false
-  xy: 260, 334
+  xy: 364, 438
   size: 50, 50
   split: 24, 25, 28, 21
   orig: 50, 50
@@ -22,7 +22,7 @@ button
   index: -1
 darkgb
   rotate: false
-  xy: 130, 132
+  xy: 260, 286
   size: 32, 32
   split: 10, 10, 9, 11
   orig: 32, 32
@@ -30,7 +30,7 @@ darkgb
   index: -1
 dial
   rotate: false
-  xy: 130, 166
+  xy: 260, 320
   size: 64, 64
   orig: 64, 64
   offset: 0, 0
@@ -66,9 +66,16 @@ metalframe
   orig: 100, 100
   offset: 0, 0
   index: -1
+planetFocus
+  rotate: false
+  xy: 130, 182
+  size: 95, 48
+  orig: 95, 48
+  offset: 0, 0
+  index: -1
 small striped hose
   rotate: false
-  xy: 364, 464
+  xy: 130, 156
   size: 48, 24
   orig: 48, 24
   offset: 0, 0

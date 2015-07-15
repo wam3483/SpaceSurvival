@@ -1,8 +1,11 @@
 package maxfat.util.random;
 
+import java.util.Random;
+
 public class RandomUtil {
 	private static long uniqueId = 0;
-
+	private static final Random random = new Random();
+	
 	public static long getUniqueId() {
 		long result = uniqueId;
 		uniqueId++;
@@ -12,6 +15,13 @@ public class RandomUtil {
 	private RandomUtil() {
 	}
 
+	public static double randomBetweenRanges(double min, double max)
+	{
+		double range = max - min;
+		double value = random.nextDouble() * range + min;
+		return value;
+	}
+	
 	public static boolean randomBool(IRandom random) {
 		return randomBool(random, .5f);
 	}

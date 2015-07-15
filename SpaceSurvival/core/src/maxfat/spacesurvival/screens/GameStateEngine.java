@@ -1,8 +1,5 @@
 package maxfat.spacesurvival.screens;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import maxfat.graph.Graph;
 import maxfat.graph.Node;
 import maxfat.graph.PlanetData;
@@ -24,20 +21,17 @@ import com.badlogic.ashley.utils.ImmutableArray;
 public class GameStateEngine {
 	private final Engine engine;
 	private final Graph<PlanetData> graph;
-	private List<PlanetGameState> planetGameStateList;
 
-	public GameStateEngine(Graph<PlanetData> graph) {
+	public GameStateEngine(Engine engine, Graph<PlanetData> graph) {
 		this.graph = graph;
-		this.planetGameStateList = new ArrayList<PlanetGameState>();
+		this.engine = engine;
 
-		this.engine = new Engine();
 		this.engine.addSystem(new SystemBattle());
 		this.engine.addSystem(new SystemSpaceTravel());
 		this.engine.addSystem(new SystemRefueling());
 		this.engine.addSystem(new SystemPlanetPopulationUpdater());
 		this.engine.addSystem(new SystemPlayerGoldUpdater());
 		this.engine.addSystem(new SystemScanningUpdater());
-		initPlanetEntities();
 	}
 
 	public Graph<PlanetData> getPlanetGraph() {
@@ -48,14 +42,11 @@ public class GameStateEngine {
 		return this.engine;
 	}
 
+	// TODO is this necessary?
 	public void addPlayer(PlayerComponent p) {
 		Entity e = new Entity();
 		e.add(p);
 		engine.addEntity(e);
-	}
-
-	public List<PlanetGameState> getAllPlanetsGameState() {
-		return this.planetGameStateList;
 	}
 
 	public Node<PlanetData> getNodeFor(PlanetData planetData) {
@@ -81,34 +72,18 @@ public class GameStateEngine {
 		return false;
 	}
 
-	void initPlanetEntities() {
-		for (Node<PlanetData> node : graph) {
-			Entity e = new Entity();
-			PlanetData data = node.getData();
-			PlanetComponent planetComp = data.getPlanetComponent();
-			e.add(planetComp);
-			
-			PopulationComponent popComp = data.getPopulationComponent();
-			if (popComp != null)
-				e.add(popComp);
-			
-			engine.addEntity(e);
-			this.planetGameStateList.add(new PlanetGameState(e, data));
-		}
+	public void addGameComponentsForPlanet(Entity e, Node<PlanetData> node) {
+		PlanetData data = node.getData();
+		PlanetComponent planetComp = data.getPlanetComponent();
+		e.add(planetComp);
+
+		PopulationComponent popComp = data.getPopulationComponent();
+		if (popComp != null)
+			e.add(popComp);
 	}
 
 	public void update(float time) {
 		this.engine.update(time);
-	}
-
-	public static class PlanetGameState {
-		public Entity planetEntity;
-		public PlanetData planetData;
-
-		public PlanetGameState(Entity planetEntity, PlanetData planetData) {
-			this.planetEntity = planetEntity;
-			this.planetData = planetData;
-		}
 	}
 
 }

@@ -8,7 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 
 public class PlanetData implements I2DData {
 	Civilization civilization;
-	Vector2 point;
+	final Vector2 point;
 	float minDistance;
 	float size;
 
@@ -44,7 +44,7 @@ public class PlanetData implements I2DData {
 	}
 
 	public void setPoint(Vector2 point) {
-		this.point = point;
+		this.point.set(point);
 	}
 
 	public float getMinDistance() {

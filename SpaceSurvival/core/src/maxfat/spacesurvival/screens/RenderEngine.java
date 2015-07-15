@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import maxfat.graph.Graph;
-import maxfat.graph.I2DData;
 import maxfat.graph.Node;
 import maxfat.graph.PlanetData;
 import maxfat.spacesurvival.rendersystem.AnimatingPolygonRegionComponent;
@@ -16,6 +15,7 @@ import maxfat.spacesurvival.rendersystem.PlanetAnimationSystem;
 import maxfat.spacesurvival.rendersystem.PlanetRenderSystem;
 import maxfat.spacesurvival.rendersystem.PositionComponent;
 import maxfat.spacesurvival.rendersystem.RadiusComponent;
+import maxfat.spacesurvival.rendersystem.SystemRenderPlanetScanProgress;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
@@ -38,14 +38,35 @@ public class RenderEngine {
 	TextureRegion land;
 	TextureRegion ocean;
 
-	public RenderEngine(Viewport viewport, Graph<PlanetData> graph) {
-		this.renderEngine = new Engine();
+	public RenderEngine(Engine engine, Viewport viewport,
+			Graph<PlanetData> graph) {
+		this.renderEngine = engine;
 		this.graph = graph;
 		this.clouds = loadTexture("planet_textures/clouds.png");
 		land = loadTexture("planet_textures/land.png");
 		ocean = loadTexture("planet_textures/ocean.png");
-		this.addNodesToEngine();
+		this.createLineBetweenPlanetsEntities();
 		this.addEntitySystems(viewport);
+	}
+
+	public void addRenderComponentsForPlanet(Entity e, Node<PlanetData> node) {
+		PlanetData data = node.getData();
+		Vector2 p = data.getPoint();
+
+		e.add(new PositionComponent((float) p.x, (float) p.y));
+		e.add(new ColorComponent());
+		e.add(new RadiusComponent((float) data.getSize()));
+
+		PolygonRegion oceanRegion = createCircle(ocean, 30, data.getSize());
+		PolygonRegion landRegion = createCircle(land, 30, data.getSize());
+		PolygonRegion cloudRegion = createCircle(clouds, 30, data.getSize());
+		AnimatingPolygonRegionComponent.PolygonLayer layer1 = new AnimatingPolygonRegionComponent.PolygonLayer(
+				oceanRegion, 0);
+		AnimatingPolygonRegionComponent.PolygonLayer layer2 = new AnimatingPolygonRegionComponent.PolygonLayer(
+				landRegion, .05f);
+		AnimatingPolygonRegionComponent.PolygonLayer layer3 = new AnimatingPolygonRegionComponent.PolygonLayer(
+				cloudRegion, .1f);
+		e.add(new AnimatingPolygonRegionComponent(layer1, layer2, layer3));
 	}
 
 	private TextureRegion loadTexture(String path) {
@@ -63,9 +84,11 @@ public class RenderEngine {
 		this.renderEngine.addSystem(new LineRenderSystem(viewport));
 		this.renderEngine.addSystem(new PlanetRenderSystem(viewport));
 		this.renderEngine.addSystem(new PlanetAnimationSystem());
+		this.renderEngine
+				.addSystem(new SystemRenderPlanetScanProgress(viewport));
 	}
 
-	private void addNodesToEngine() {
+	private void createLineBetweenPlanetsEntities() {
 		Node<PlanetData> firstNode = graph.getNode();
 		HashSet<Node<PlanetData>> hashset = new HashSet<Node<PlanetData>>();
 		Queue<Node<PlanetData>> queue = new LinkedList<Node<PlanetData>>();
@@ -73,7 +96,6 @@ public class RenderEngine {
 		hashset.add(firstNode);
 		while (!queue.isEmpty()) {
 			Node<PlanetData> nextNode = queue.poll();
-			createNodeEntity(nextNode);
 			for (Node<PlanetData> connectedNode : nextNode.getEdges()) {
 				if (!hashset.contains(connectedNode)) {
 					this.createLineEntity(nextNode, connectedNode);
@@ -119,12 +141,14 @@ public class RenderEngine {
 
 	private void createNodeEntity(Node<PlanetData> node) {
 		Entity e = new Entity();
-		I2DData data = node.getData();
+		PlanetData data = node.getData();
 		Vector2 p = data.getPoint();
 
 		e.add(new PositionComponent((float) p.x, (float) p.y));
 		e.add(new ColorComponent());
 		e.add(new RadiusComponent((float) data.getSize()));
+		e.add(data.getPlanetComponent());
+		// e.add(data.getPopulationComponent());
 
 		PolygonRegion oceanRegion = createCircle(ocean, 30, data.getSize());
 		PolygonRegion landRegion = createCircle(land, 30, data.getSize());

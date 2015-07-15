@@ -2,8 +2,12 @@ package maxfat.spacesurvival.overlap2d;
 
 import java.util.ArrayList;
 
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -16,6 +20,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.uwsoft.editor.renderer.SceneLoader;
 import com.uwsoft.editor.renderer.actor.CompositeItem;
 import com.uwsoft.editor.renderer.actor.IBaseItem;
+import com.uwsoft.editor.renderer.actor.ImageItem;
 import com.uwsoft.editor.renderer.actor.LabelItem;
 
 public class GameDialogs {
@@ -23,14 +28,17 @@ public class GameDialogs {
 	private final Viewport viewport;
 	private final Batch batch;
 	private final SceneLoader sceneLoader;
-
+	private final ShapeRenderer shapeRenderer;
 	float dialogAnimationSpeed = .5f;
 
 	public GameDialogs(StageStack stack, Viewport viewport, Batch batch) {
 		this.displayStack = stack;
 		this.viewport = viewport;
 		this.batch = batch;
-		this.sceneLoader = new SceneLoader();
+		CustomResourceManager resourceManager = new CustomResourceManager();
+		resourceManager.initAllResources();
+		this.sceneLoader = new SceneLoader(resourceManager);
+		this.shapeRenderer = new ShapeRenderer();
 	}
 
 	private IBaseItem findItemByIdentifier(String id, ArrayList<IBaseItem> items) {
@@ -74,32 +82,75 @@ public class GameDialogs {
 						Interpolation.swingIn));
 	}
 
-	// TODO need some planet data to render in correct position
-	public void showUnknownPlanetDialog(final Runnable scanPlanetCallback,
+	private Vector2 getCenterOfActor(Actor a) {
+		return new Vector2(a.getX() + a.getWidth() / 2 * a.getScaleX(),
+				a.getY() + a.getHeight() / 2 * a.getScaleY());
+	}
+
+	private void createPlanetFrameAction(Actor frameActor, Actor centerActor,
+			float delay, float moveDistance) {
+		float planetFrameAlpha = .9f;
+
+		Vector2 originalPos = new Vector2(frameActor.getX(), frameActor.getY());
+		Vector2 centerOfFrame = getCenterOfActor(frameActor);
+		Vector2 moveBy = getCenterOfActor(centerActor);
+		moveBy.sub(centerOfFrame).nor().scl(moveDistance);
+
+		Color c = frameActor.getColor();
+		frameActor.setColor(c.r, c.g, c.b, 0f);
+		Action moveAndFadeIn = Actions.parallel(Actions.alpha(planetFrameAlpha,
+				2, Interpolation.elastic), Actions.moveTo(originalPos.x,
+				originalPos.y, 2, Interpolation.exp10));
+		Action action = Actions.sequence(Actions.delay(delay),
+				Actions.moveBy(moveBy.x, moveBy.y), moveAndFadeIn);
+		frameActor.addAction(action);
+	}
+
+	public void showUnknownPlanetDialog(Entity planetEntity,
+			final Runnable scanPlanetCallback,
 			final ICallback<IDialog> capturePlanetCallback) {
-		this.sceneLoader.loadScene("UnknownPlanetDialog");
+		this.sceneLoader.loadScene("PlanetManagementDialog");
 		final CompositeItem root = sceneLoader.getRoot();
+		SimpleButtonScript yesNoScript = new SimpleButtonScript();
+		root.addScriptTo("SimpleButton", yesNoScript);
 		ArrayList<IBaseItem> allItems = root.getItems();
 
-		final Stage stage = new Stage(this.viewport, this.batch);
-
-		CompositeItem planetPlaceholder = (CompositeItem) findItemByIdentifier(
+		ImageItem planetPlaceholder = (ImageItem) findItemByIdentifier(
 				"planetPlaceholder", allItems);
 		float x = planetPlaceholder.getX();
 		float y = planetPlaceholder.getY();
 		int zIndex = planetPlaceholder.getZIndex();
-		float width = planetPlaceholder.getWidth();
-		float height = planetPlaceholder.getHeight();
+		float width = planetPlaceholder.getWidth()
+				* planetPlaceholder.getScaleX();
+		float height = planetPlaceholder.getHeight()
+				* planetPlaceholder.getScaleY();
 		Group group = planetPlaceholder.getParent();
 		group.removeActor(planetPlaceholder);
 
-		Actor planetRenderer = new Actor();
+		PlanetTileActor planetRenderer = new PlanetTileActor(planetEntity,
+				this.shapeRenderer);
+		group.addActor(planetRenderer);
 		planetRenderer.setBounds(x, y, width, height);
 		planetRenderer.setZIndex(zIndex);
-		group.addActor(planetRenderer);
 
-		CompositeItem btnScan = (CompositeItem) findItemByIdentifier("btnScan",
-				allItems);
+		// fade in green corners around planet.
+		float planetFrameMoveDist = 50;
+		float planetFrameDelay = dialogAnimationSpeed / 2;
+
+		final Stage stage = new Stage(this.viewport, this.batch);
+		ImageItem topRightDisplay = (ImageItem) findItemByIdentifier(
+				"topRightDisplay", allItems);
+		createPlanetFrameAction(topRightDisplay, planetRenderer,
+				planetFrameDelay, planetFrameMoveDist);
+
+		ImageItem bottomLeftDisplay = (ImageItem) findItemByIdentifier(
+				"bottomLeftDisplay", allItems);
+		createPlanetFrameAction(bottomLeftDisplay, planetRenderer,
+				planetFrameDelay, planetFrameMoveDist);
+
+		// set up button animations and listeners
+		CompositeItem btnScan = (CompositeItem) findItemByIdentifier(
+				"btnScanPlanet", allItems);
 		Action closeAnimation = getDialogCloseAnimation();
 		Action scanAction = Actions.sequence(closeAnimation,
 				new DialogDisposeAndCallback(stage, scanPlanetCallback));
@@ -177,6 +228,7 @@ public class GameDialogs {
 
 	public void dispose() {
 		this.displayStack.dispose();
+		this.shapeRenderer.dispose();
 	}
 
 	private static class CloseDialogClickListener extends ClickListener {

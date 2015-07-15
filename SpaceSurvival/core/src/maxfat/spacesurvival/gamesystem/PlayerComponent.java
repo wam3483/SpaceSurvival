@@ -3,11 +3,12 @@ package maxfat.spacesurvival.gamesystem;
 import java.util.HashSet;
 
 import com.badlogic.ashley.core.Component;
+import com.badlogic.gdx.graphics.Color;
 
 public class PlayerComponent extends Component {
 	public long id;
 	public long gold;
-
+	public Color color;
 	private HashSet<PlanetComponent> planetInfo;
 
 	public PlayerComponent(long id) {

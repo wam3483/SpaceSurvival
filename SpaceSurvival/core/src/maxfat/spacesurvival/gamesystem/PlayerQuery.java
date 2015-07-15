@@ -4,7 +4,6 @@ import maxfat.graph.Graph;
 import maxfat.graph.Node;
 import maxfat.graph.PlanetData;
 import maxfat.spacesurvival.screens.GameStateEngine;
-import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
@@ -13,12 +12,20 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.utils.Array;
 
 public class PlayerQuery {
-	private PlayerComponent playerComponent;
+	private final PlayerComponent playerComponent;
 	GameStateEngine gameState;
 
 	public PlayerQuery(PlayerComponent playerComp, GameStateEngine gameState) {
 		this.playerComponent = playerComp;
 		this.gameState = gameState;
+	}
+
+	public PlayerComponent getPlayerComponent() {
+		return this.playerComponent;
+	}
+
+	public PlanetComponent getPlanetComponent(Entity e) {
+		return e.getComponent(PlanetComponent.class);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -47,29 +54,27 @@ public class PlayerQuery {
 		return null;
 	}
 
-	public boolean ownsPlanet(PlanetGameState planetGameState) {
-		PlayerComponent planetOwner = planetGameState.planetEntity
-				.getComponent(PlayerComponent.class);
+	public boolean ownsPlanet(Entity e) {
+		PlayerComponent planetOwner = e.getComponent(PlayerComponent.class);
 		return this.playerComponent.equals(planetOwner);
 	}
 
-	public boolean hasLimitedKnowledgeOfPlanet(PlanetGameState planetState) {
-		PlanetComponent planetComp = planetState.planetData
-				.getPlanetComponent();
+	public boolean hasLimitedKnowledgeOfPlanet(Entity e) {
+		PlanetComponent planetComp = e.getComponent(PlanetComponent.class);
 		return this.playerComponent.hasKnowledgeOfPlanet(planetComp);
 	}
 
-	public boolean canPlayerScanPlanet(PlanetGameState planetGameState) {
-		PlanetComponent p = planetGameState.planetData.getPlanetComponent();
+	public boolean canPlayerScanPlanet(Entity entity) {
+		PlanetComponent planetComp = entity.getComponent(PlanetComponent.class);
 		// has knowledge of planet if its current owned, previously owned, or
 		// previously scanned.
-		if (this.playerComponent.hasKnowledgeOfPlanet(p)) {
+		if (this.playerComponent.hasKnowledgeOfPlanet(planetComp)) {
 			return false;
 		}
 		// have no knowledge of planet, and planet is neighbor of an owned
 		// planet.
 		else {
-			Node<PlanetData> canScanNode = getNodeFor(p);
+			Node<PlanetData> canScanNode = getNodeFor(planetComp);
 			for (Entity e : getOwnedPlanets()) {
 				PlanetComponent ownedComp = e
 						.getComponent(PlanetComponent.class);

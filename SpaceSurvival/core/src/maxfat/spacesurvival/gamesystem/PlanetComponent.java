@@ -2,10 +2,12 @@ package maxfat.spacesurvival.gamesystem;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 
 public class PlanetComponent extends Component {
 
 	public String name;
+	private final Vector2 position;
 
 	public float scanTime = 1;
 	public float population;
@@ -20,8 +22,20 @@ public class PlanetComponent extends Component {
 	public float percentWater;
 	public float temperatureCelsius;
 
-	public PlanetComponent() {
+	public PlanetComponent(Vector2 position) {
+		this.position = position;
+	}
 
+	public Vector2 getPosition() {
+		return this.position;
+	}
+
+	public void setPosition(float x, float y) {
+		this.position.set(x, y);
+	}
+
+	public void setPosition(Vector2 position) {
+		this.setPosition(position.x, position.y);
 	}
 
 	public float getIdlePopulation() {

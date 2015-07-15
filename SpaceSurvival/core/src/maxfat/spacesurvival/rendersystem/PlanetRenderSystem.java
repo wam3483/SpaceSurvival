@@ -1,5 +1,8 @@
 package maxfat.spacesurvival.rendersystem;
 
+import maxfat.spacesurvival.gamesystem.PlanetComponent;
+import maxfat.spacesurvival.gamesystem.PlayerComponent;
+
 import com.badlogic.ashley.core.ComponentMapper;
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
@@ -13,12 +16,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class PlanetRenderSystem extends EntitySystem {
 	private ImmutableArray<Entity> entities;
 	PolygonSpriteBatch spriteBatch;
-	private ComponentMapper<PositionComponent> pm = ComponentMapper
+	private ComponentMapper<PositionComponent> positionMapper = ComponentMapper
 			.getFor(PositionComponent.class);
-	private ComponentMapper<ColorComponent> vm = ComponentMapper
-			.getFor(ColorComponent.class);
-	private ComponentMapper<RadiusComponent> radiusMap = ComponentMapper
-			.getFor(RadiusComponent.class);
+	private ComponentMapper<PlayerComponent> playerMapper = ComponentMapper
+			.getFor(PlayerComponent.class);
 	private ComponentMapper<AnimatingPolygonRegionComponent> regionMapper = ComponentMapper
 			.getFor(AnimatingPolygonRegionComponent.class);
 
@@ -32,8 +33,9 @@ public class PlanetRenderSystem extends EntitySystem {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void addedToEngine(Engine engine) {
-		entities = engine.getEntitiesFor(Family.all(PositionComponent.class,
-				RadiusComponent.class, AnimatingPolygonRegionComponent.class)
+		this.entities = engine.getEntitiesFor(Family.all(
+				PositionComponent.class, RadiusComponent.class,
+				AnimatingPolygonRegionComponent.class, PlanetComponent.class)
 				.get());
 	}
 
@@ -44,14 +46,21 @@ public class PlanetRenderSystem extends EntitySystem {
 		this.spriteBatch.setTransformMatrix(camera.view);
 		this.spriteBatch.begin();
 
-		for (int i = 0; i < entities.size(); ++i) {
+		for (int i = 0; i < this.entities.size(); ++i) {
 			Entity entity = entities.get(i);
-			PositionComponent position = pm.get(entity);
+			PositionComponent position = positionMapper.get(entity);
 			AnimatingPolygonRegionComponent poly = this.regionMapper
 					.get(entity);
+			PlayerComponent playerComponent = this.playerMapper.get(entity);
+			boolean onlyRenderFirst = false;
+			if (playerComponent != null) {
+				onlyRenderFirst = true;
+			}
 			for (AnimatingPolygonRegionComponent.PolygonLayer layer : poly.layers) {
 				this.spriteBatch.draw(layer.polygonRegion, position.x,
 						position.y);
+				if (onlyRenderFirst)
+					break;
 			}
 		}
 		this.spriteBatch.end();

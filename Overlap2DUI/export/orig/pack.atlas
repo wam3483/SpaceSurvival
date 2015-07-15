@@ -1,30 +1,82 @@
 
 pack.png
-size: 512,128
+size: 512,512
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
+brightScrewPanel
+  rotate: false
+  xy: 2, 104
+  size: 126, 126
+  split: 64, 61, 61, 64
+  orig: 126, 126
+  offset: 0, 0
+  index: -1
 button
   rotate: false
-  xy: 208, 54
+  xy: 364, 438
   size: 50, 50
   split: 24, 25, 28, 21
   orig: 50, 50
   offset: 0, 0
   index: -1
+darkgb
+  rotate: false
+  xy: 260, 286
+  size: 32, 32
+  split: 10, 10, 9, 11
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+dial
+  rotate: false
+  xy: 260, 320
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
 dialogbg
   rotate: false
-  xy: 2, 2
+  xy: 260, 386
   size: 102, 102
   orig: 102, 102
   offset: 0, 0
   index: -1
+leftConnector
+  rotate: false
+  xy: 104, 54
+  size: 16, 48
+  orig: 16, 48
+  offset: 0, 0
+  index: -1
+lightmetalframe
+  rotate: false
+  xy: 2, 232
+  size: 256, 256
+  split: 128, 127, 128, 127
+  orig: 256, 256
+  offset: 0, 0
+  index: -1
 metalframe
   rotate: false
-  xy: 106, 4
+  xy: 2, 2
   size: 100, 100
   split: 34, 35, 56, 43
   pad: 35, 36, 56, 43
   orig: 100, 100
+  offset: 0, 0
+  index: -1
+planetFocus
+  rotate: false
+  xy: 130, 182
+  size: 95, 48
+  orig: 95, 48
+  offset: 0, 0
+  index: -1
+small striped hose
+  rotate: false
+  xy: 130, 156
+  size: 48, 24
+  orig: 48, 24
   offset: 0, 0
   index: -1

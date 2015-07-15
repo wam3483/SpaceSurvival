@@ -1,54 +1,84 @@
 package maxfat.spacesurvival.screens;
 
-import maxfat.graph.Graph;
-import maxfat.graph.PlanetData;
-import maxfat.spacesurvival.gamesystem.PlayerComponent;
+import maxfat.spacesurvival.gamesystem.PlanetComponent;
 import maxfat.spacesurvival.gamesystem.PlayerQuery;
+import maxfat.spacesurvival.gamesystem.ScanComponent;
 import maxfat.spacesurvival.overlap2d.GameDialogs;
+import maxfat.spacesurvival.overlap2d.GameDialogs.IDialog;
+import maxfat.spacesurvival.overlap2d.ICallback;
 import maxfat.spacesurvival.overlap2d.StageStack;
-import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
+import maxfat.spacesurvival.rendersystem.PositionComponent;
+import maxfat.spacesurvival.rendersystem.RadiusComponent;
+import maxfat.spacesurvival.rendersystem.ScanComponentRenderable;
+import maxfat.spacesurvival.rendersystem.TextureActor;
 import maxfat.util.random.RandomUtil;
 
+import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Entity;
+import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen implements Screen {
-	private FitViewport gameViewport;
 	private FitViewport uiViewport;
 	GameScreenInputManager inputManager;
-	private GameStateEngine gameState;
-	private RenderEngine renderEngine;
 	ViewController gameView;
 
 	PlayerQuery player;
 	StageStack stageStack;
 	GameDialogs dialogs;
+	GameManager gameManager;
 
-	public GameScreen(Graph<PlanetData> graph) {
-		this.gameViewport = new FitViewport(GameConstants.ScreenWidth,
-				GameConstants.ScreenHeight);
+	private final ComponentMapper<RadiusComponent> radiusMapper = ComponentMapper
+			.getFor(RadiusComponent.class);
+	private final ComponentMapper<PlanetComponent> planetMapper = ComponentMapper
+			.getFor(PlanetComponent.class);
+	private final AssetManager assetManager;
+
+	public GameScreen(GameManager gameManager, AssetManager assetManager) {
+		this.assetManager = assetManager;
+		this.gameManager = gameManager;
+		this.player = this.gameManager.getPlayer();
 		this.uiViewport = new FitViewport(GameConstants.ScreenWidth,
 				GameConstants.ScreenHeight);
+		Viewport gameViewport = gameManager.getGameViewport();
 		this.gameView = new ViewController(gameViewport);
-		this.renderEngine = new RenderEngine(this.gameViewport, graph);
-		PlayerComponent playerComponent = new PlayerComponent(
-				RandomUtil.getUniqueId());
-		this.gameState = new GameStateEngine(this.renderEngine.getGraph());
-		this.gameState.addPlayer(playerComponent);
-		this.player = new PlayerQuery(playerComponent, this.gameState);
-		this.inputManager = new GameScreenInputManager(this.gameState,
-				this.gameViewport);
+
+		this.inputManager = new GameScreenInputManager(gameViewport);
 		this.inputManager.listener = inputListener;
 		this.stageStack = new StageStack();
 		this.stageStack.push(new StageStack.StageWrapper(null,
 				this.inputManager));
 
 		dialogs = new GameDialogs(this.stageStack, this.uiViewport,
-				new SpriteBatch());
+				new PolygonSpriteBatch());
+		initPlanetTouchableUI();
+	}
+
+	private void initPlanetTouchableUI() {
+		ImmutableArray<Entity> ary = gameManager.getPlanets();
+		for (final Entity e : ary) {
+			final Actor a = new Actor();
+			PlanetComponent p = planetMapper.get(e);
+			RadiusComponent radiusComp = radiusMapper.get(e);
+			Vector2 point = p.getPosition();
+			float size = radiusComp.radius * 2;
+			a.setBounds(point.x - size / 2, point.y - size / 2, size, size);
+			a.setUserObject(e);
+			this.inputManager.addPlanetActor(a);
+		}
 	}
 
 	GameScreenInputManager.IGameUIListener inputListener = new GameScreenInputManager.IGameUIListener() {
@@ -64,14 +94,59 @@ public class GameScreen implements Screen {
 		}
 
 		@Override
-		public void onPlanetClicked(PlanetGameState p) {
-			if (player.ownsPlanet(p)) {
+		public void onPlanetClicked(final Entity entity) {
+			if (player.ownsPlanet(entity)) {
 				// display management view.
-			} else if (player.hasLimitedKnowledgeOfPlanet(p)) {
+			} else if (player.hasLimitedKnowledgeOfPlanet(entity)) {
 				// display limited planet info.
 				// population name, planet stats, planet name.
-			} else if (player.canPlayerScanPlanet(p)) {
+			} else if (player.canPlayerScanPlanet(entity)) {
 				// option to remotely scan planet.
+				Runnable scanPlanetRunnable = new Runnable() {
+					@Override
+					public void run() {
+						PlanetComponent planetComp = entity
+								.getComponent(PlanetComponent.class);
+						PositionComponent pos = entity
+								.getComponent(PositionComponent.class);
+						RadiusComponent radius = entity
+								.getComponent(RadiusComponent.class);
+						Entity scanEntity = new Entity();
+						scanEntity.add(planetComp);
+						scanEntity.add(pos);
+						scanEntity.add(radius);
+						scanEntity.add(player.getPlayerComponent());
+						scanEntity.add(new ScanComponent());
+						TextureAtlas atlas = assetManager.get(
+								"scanProgress.atlas", TextureAtlas.class);
+						Array<AtlasRegion> ary = atlas.getRegions();
+						Array<Actor> actors = new Array<Actor>();
+						Vector2 v = planetComp.getPosition();
+						for (int i = 0; i < 5; i++) {
+							TextureRegion region = ary.get(i);
+							Actor a = new TextureActor(region);
+							a.setPosition(v.x - region.getRegionWidth() / 2,
+									v.y - region.getRegionHeight() / 2);
+							float rotateSpeed = 10 * (i + 1);
+							float initialRotation = (float) RandomUtil
+									.randomBetweenRanges(0, 360);
+							a.setRotation(initialRotation);
+							a.addAction(Actions.forever(Actions.rotateBy(
+									rotateSpeed, 1)));
+							actors.add(a);
+						}
+						scanEntity.add(new ScanComponentRenderable(actors));
+						gameManager.addEntity(scanEntity);
+					}
+				};
+				ICallback<IDialog> claimPlanetCallback = new ICallback<IDialog>() {
+					@Override
+					public void callback(IDialog scanPlanetDialog) {
+						scanPlanetDialog.close();
+					}
+				};
+				dialogs.showUnknownPlanetDialog(entity, scanPlanetRunnable,
+						claimPlanetCallback);
 			}
 		}
 
@@ -80,8 +155,7 @@ public class GameScreen implements Screen {
 			dialogs.showYesNoDialog("Do you want to quit?", "Yes", "No",
 					new Runnable() {
 						public void run() {
-							System.out.println("quit!");
-							// Gdx.app.exit();
+							Gdx.app.exit();
 						}
 					}, null);
 		}
@@ -98,21 +172,19 @@ public class GameScreen implements Screen {
 		Gdx.graphics.getGL20().glClear(
 				GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		this.gameView.update(delta);
-		this.gameState.update(delta);
-		this.renderEngine.render(delta);
+		this.gameManager.update(delta);
 		this.dialogs.render(delta);
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		this.gameViewport.update(width, height);
-		this.gameViewport.update(width, height);
+		this.gameManager.getGameViewport().update(width, height);
 		this.dialogs.update(width, height);
 	}
 
 	@Override
 	public void pause() {
-
+		this.inputManager.pause();
 	}
 
 	@Override

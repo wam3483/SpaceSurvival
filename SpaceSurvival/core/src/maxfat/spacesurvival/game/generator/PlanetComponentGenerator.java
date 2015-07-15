@@ -2,6 +2,8 @@ package maxfat.spacesurvival.game.generator;
 
 import maxfat.spacesurvival.gamesystem.PlanetComponent;
 
+import com.badlogic.gdx.math.Vector2;
+
 public class PlanetComponentGenerator {
 	private final PlanetParams params;
 	private final PlanetNameService nameProvider;
@@ -13,7 +15,7 @@ public class PlanetComponentGenerator {
 	}
 
 	public PlanetComponent generatePlanetComponent() {
-		PlanetComponent comp = new PlanetComponent();
+		PlanetComponent comp = new PlanetComponent(new Vector2());
 		comp.temperatureCelsius = params.temperatureProvider.getValue();
 		comp.percentWater = params.waterProvider.getValue();
 		comp.foodBonus = params.foodBonusProvider.getValue();

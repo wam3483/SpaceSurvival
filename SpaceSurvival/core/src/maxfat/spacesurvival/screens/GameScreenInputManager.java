@@ -1,8 +1,10 @@
 package maxfat.spacesurvival.screens;
 
-import maxfat.graph.I2DData;
-import maxfat.spacesurvival.screens.GameStateEngine.PlanetGameState;
+import maxfat.spacesurvival.gamesystem.PlanetComponent;
+import maxfat.spacesurvival.rendersystem.RadiusComponent;
 
+import com.badlogic.ashley.core.ComponentMapper;
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
@@ -23,64 +25,37 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  *
  */
 public class GameScreenInputManager extends InputMultiplexer {
-
-	private static final IGameUIListener NullListener = new IGameUIListener() {
-		@Override
-		public void onPlanetClicked(PlanetGameState p) {
-		}
-
-		@Override
-		public void viewportDrag(Vector2 v) {
-		}
-
-		@Override
-		public void zoom(float increment) {
-		}
-
-		@Override
-		public void onExitRequested() {
-		}
-	};
-
 	IGameUIListener listener = NullListener;
 	private final Stage stage;
-	private final Viewport viewport;
+	private final Viewport gameViewport;
 
-	public GameScreenInputManager(GameStateEngine gameState, Viewport viewport) {
-		this.viewport = viewport;
-		this.stage = new Stage(viewport);
-		this.initStage(gameState);
+	public GameScreenInputManager(Viewport gameViewport) {
+		this.stage = new Stage(gameViewport);
 		this.addProcessor(this.stage);
+		this.gameViewport = gameViewport;
 		this.addProcessor(this.inputProcessor);
 	}
 
-	void initStage(GameStateEngine gameState) {
-		for (final PlanetGameState planetGameState : gameState
-				.getAllPlanetsGameState()) {
-			final Actor a = new Actor();
-
-			I2DData data = planetGameState.planetData;
-			Vector2 point = data.getPoint();
-			float size = data.getSize() * 2;
-			a.setBounds(point.x - size / 2, point.y - size / 2, size, size);
-			a.addListener(new ClickListener() {
-				public void clicked(InputEvent event, float x, float y) {
-					listener.onPlanetClicked(planetGameState);
-				}
-			});
-			this.stage.addActor(a);
-		}
+	public void addPlanetActor(final Actor a) {
+		this.stage.addActor(a);
+		a.addListener(new ClickListener() {
+			public void clicked(InputEvent event, float x, float y) {
+				Entity planetEntity = (Entity) a.getUserObject();
+				listener.onPlanetClicked(planetEntity);
+			}
+		});
 	}
 
+	PinchToZoomController pinchToZoom = new PinchToZoomController();
 	InputProcessor inputProcessor = new InputProcessor() {
-		double scrollSpeed = .2;
+		double mouseScrollSpeed = .2;
 		private int startDragPointer;
 		int startX;
 		int startY;
 
 		@Override
 		public boolean keyDown(int keycode) {
-			if (keycode == Keys.ESCAPE) {
+			if (keycode == Keys.ESCAPE || keycode == Keys.BACK) {
 				listener.onExitRequested();
 			}
 			return false;
@@ -99,6 +74,7 @@ public class GameScreenInputManager extends InputMultiplexer {
 		@Override
 		public boolean touchDown(int screenX, int screenY, int pointer,
 				int button) {
+			pinchToZoom.fingerInput(screenX, screenY, pointer);
 			this.startDragPointer = pointer;
 			startX = screenX;
 			startY = screenY;
@@ -107,6 +83,7 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		@Override
 		public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+			pinchToZoom.removeFinger(pointer);
 			this.startDragPointer = -1;
 			return false;
 		}
@@ -117,7 +94,11 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		@Override
 		public boolean touchDragged(int screenX, int screenY, int pointer) {
-			if (pointer == startDragPointer) {
+			pinchToZoom.fingerInput(screenX, screenY, pointer);
+			if (pinchToZoom.isActive()) {
+				float deltaZoom = pinchToZoom.getLastZoomChange();
+				listener.zoom(deltaZoom);
+			} else if (pointer == startDragPointer) {
 				int diffX = screenX - startX;
 				int diffY = screenY - startY;
 				startX = screenX;
@@ -125,7 +106,7 @@ public class GameScreenInputManager extends InputMultiplexer {
 				zero.setZero();
 				temp.set(diffX, diffY, 0);
 
-				OrthographicCamera camera = (OrthographicCamera) viewport
+				OrthographicCamera camera = (OrthographicCamera) gameViewport
 						.getCamera();
 				Vector3 v1 = camera.unproject(zero);
 				Vector3 v2 = camera.unproject(temp);
@@ -144,11 +125,15 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		@Override
 		public boolean scrolled(int amount) {
-			float scale = (float) scrollSpeed * amount;
+			float scale = (float) mouseScrollSpeed * amount;
 			listener.zoom(scale);
 			return true;
 		}
 	};
+
+	public void pause() {
+		this.pinchToZoom.clear();
+	}
 
 	public void update(float time) {
 		this.stage.act(time);
@@ -159,7 +144,7 @@ public class GameScreenInputManager extends InputMultiplexer {
 	}
 
 	public interface IGameUIListener {
-		void onPlanetClicked(PlanetGameState p);
+		void onPlanetClicked(Entity planetEntity);
 
 		void viewportDrag(Vector2 v);
 
@@ -167,4 +152,22 @@ public class GameScreenInputManager extends InputMultiplexer {
 
 		void onExitRequested();
 	}
+
+	private static final IGameUIListener NullListener = new IGameUIListener() {
+		@Override
+		public void onPlanetClicked(Entity p) {
+		}
+
+		@Override
+		public void viewportDrag(Vector2 v) {
+		}
+
+		@Override
+		public void zoom(float increment) {
+		}
+
+		@Override
+		public void onExitRequested() {
+		}
+	};
 }
