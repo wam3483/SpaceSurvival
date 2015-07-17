@@ -25,16 +25,9 @@ scan3
   orig: 128, 128
   offset: 0, 0
   index: -1
-scan4
-  rotate: false
-  xy: 392, 2
-  size: 128, 128
-  orig: 128, 128
-  offset: 0, 0
-  index: -1
 scan5
   rotate: false
-  xy: 522, 2
+  xy: 392, 2
   size: 128, 128
   orig: 128, 128
   offset: 0, 0

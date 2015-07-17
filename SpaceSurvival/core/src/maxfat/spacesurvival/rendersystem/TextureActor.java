@@ -16,10 +16,11 @@ public class TextureActor extends Actor {
 		float rotation = this.getRotation();
 		float width = this.region.getRegionWidth();
 		float height = this.region.getRegionHeight();
+		batch.setColor(this.getColor());
 		batch.draw(this.region, //
 				getX(), getY(), //
 				width / 2, height / 2, //
 				width, height,//
-				1, 1, rotation);
+				getScaleX(), getScaleY(), rotation);
 	}
 }

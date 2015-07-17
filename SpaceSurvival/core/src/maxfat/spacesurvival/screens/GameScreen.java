@@ -19,12 +19,15 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.Array;
@@ -122,17 +125,48 @@ public class GameScreen implements Screen {
 						Array<AtlasRegion> ary = atlas.getRegions();
 						Array<Actor> actors = new Array<Actor>();
 						Vector2 v = planetComp.getPosition();
-						for (int i = 0; i < 5; i++) {
+						float scaleMultiplier = .5f;
+						float initialAnimationDuration = scaleMultiplier
+								* ary.size;
+						float baseAlpha = .7f;
+						for (int i = 0; i < ary.size; i++) {
 							TextureRegion region = ary.get(i);
 							Actor a = new TextureActor(region);
+							a.setColor(new Color(Color.rgba8888(.25f, .5f,
+									.66f, baseAlpha)));
 							a.setPosition(v.x - region.getRegionWidth() / 2,
 									v.y - region.getRegionHeight() / 2);
 							float rotateSpeed = 10 * (i + 1);
 							float initialRotation = (float) RandomUtil
 									.randomBetweenRanges(0, 360);
 							a.setRotation(initialRotation);
-							a.addAction(Actions.forever(Actions.rotateBy(
-									rotateSpeed, 1)));
+							a.setScale(0);
+							Action extraAction = null;
+							if (i == 0) {
+								Action scaleUp = Actions.parallel(Actions
+										.alpha(baseAlpha/2, .5f), Actions.scaleBy(1, 1,
+										.5f, Interpolation.swingOut));
+								Action scaleDown = Actions.parallel(Actions
+										.alpha(baseAlpha, 1f), Actions.scaleTo(1, 1,
+										1f, Interpolation.linear));
+								extraAction = Actions
+										.sequence(
+												Actions.delay(initialAnimationDuration),
+												Actions.forever(Actions
+														.sequence(Actions
+																.delay(5),
+																scaleUp,
+																scaleDown)));
+							} else {
+								extraAction = Actions.delay(0);
+							}
+							float scaleDelay = i * scaleMultiplier;
+							a.addAction(Actions.sequence(Actions
+									.delay(scaleDelay), Actions.scaleTo(1, 1,
+									.5f, new Interpolation.SwingOut(10)),
+									Actions.parallel(extraAction, Actions
+											.forever(Actions.rotateBy(
+													rotateSpeed, 1)))));
 							actors.add(a);
 						}
 						scanEntity.add(new ScanComponentRenderable(actors));
