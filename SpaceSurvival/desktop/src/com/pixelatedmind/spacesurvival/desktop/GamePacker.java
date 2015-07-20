@@ -6,10 +6,25 @@ import com.badlogic.gdx.tools.texturepacker.TexturePacker;
 
 public class GamePacker {
 	public static void main(String[] args) {
-		pack("../../GameImages/Scan", "../android/assets", "scanProgress");
+		String imagePath = "../android/assets/images";
+		pack("../../GameImages/Scan", imagePath, "scanProgress");
+
+		TexturePacker.Settings uiPackSettings = new TexturePacker.Settings();
+		uiPackSettings.paddingX = 20;
+		uiPackSettings.paddingY = 20;
+		uiPackSettings.duplicatePadding = true;
+		uiPackSettings.edgePadding = true;
+		uiPackSettings.bleed = true;
+		pack(uiPackSettings, "../../GameImages/UI", imagePath, "uiAtlas");
 	}
 
-	static void pack(String inputDir, String output, String outputFileName) {
+	static void pack(String inputDir, String outputDir, String outputFileName) {
+		TexturePacker.Settings settings = new TexturePacker.Settings();
+		pack(settings, inputDir, outputDir, outputFileName);
+	}
+
+	static void pack(TexturePacker.Settings settings, String inputDir,
+			String output, String outputFileName) {
 		File scanDir = new File(inputDir);
 		File outputDir = new File(output);
 		File imgFile = new File(output + File.separatorChar + outputFileName
@@ -24,8 +39,6 @@ public class GamePacker {
 			throw new RuntimeException("failed to delete image file");
 		if (packFile.exists() && !packFile.delete())
 			throw new RuntimeException("failed to delete pack file");
-
-		TexturePacker.Settings settings = new TexturePacker.Settings();
 		TexturePacker.process(settings, inputDir, output, outputFileName);
 	}
 }

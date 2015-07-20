@@ -10,12 +10,13 @@ import maxfat.graph.PlanetData;
 import maxfat.spacesurvival.rendersystem.AnimatingPolygonRegionComponent;
 import maxfat.spacesurvival.rendersystem.ColorComponent;
 import maxfat.spacesurvival.rendersystem.LineComponent;
-import maxfat.spacesurvival.rendersystem.LineRenderSystem;
-import maxfat.spacesurvival.rendersystem.PlanetAnimationSystem;
-import maxfat.spacesurvival.rendersystem.PlanetRenderSystem;
 import maxfat.spacesurvival.rendersystem.PositionComponent;
 import maxfat.spacesurvival.rendersystem.RadiusComponent;
-import maxfat.spacesurvival.rendersystem.SystemRenderPlanetScanProgress;
+import maxfat.spacesurvival.rendersystem.SystemLineRenderer;
+import maxfat.spacesurvival.rendersystem.SystemPlanetAnimation;
+import maxfat.spacesurvival.rendersystem.SystemPlanetNotificationRenderer;
+import maxfat.spacesurvival.rendersystem.SystemPlanetRenderer;
+import maxfat.spacesurvival.rendersystem.SystemPlanetScanRenderer;
 
 import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.Entity;
@@ -23,30 +24,38 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureWrap;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.EarClippingTriangulator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ShortArray;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class RenderEngine {
 	private final Engine renderEngine;
 	private final Graph<PlanetData> graph;
-
+	private final Viewport noScaleViewport;
 	TextureRegion clouds;
 	TextureRegion land;
 	TextureRegion ocean;
 
-	public RenderEngine(Engine engine, Viewport viewport,
+	public RenderEngine(Engine engine, Viewport gameViewport,
 			Graph<PlanetData> graph) {
 		this.renderEngine = engine;
 		this.graph = graph;
+		this.noScaleViewport = new FitViewport(GameConstants.getScreenWidth(),
+				GameConstants.getScreenHeight());
+		this.noScaleViewport.update(Gdx.graphics.getWidth(),
+				Gdx.graphics.getHeight(), false);
+
 		this.clouds = loadTexture("planet_textures/clouds.png");
 		land = loadTexture("planet_textures/land.png");
 		ocean = loadTexture("planet_textures/ocean.png");
+
 		this.createLineBetweenPlanetsEntities();
-		this.addEntitySystems(viewport);
+		this.addEntitySystems(gameViewport);
 	}
 
 	public void addRenderComponentsForPlanet(Entity e, Node<PlanetData> node) {
@@ -81,11 +90,14 @@ public class RenderEngine {
 	}
 
 	private void addEntitySystems(Viewport viewport) {
-		this.renderEngine.addSystem(new LineRenderSystem(viewport));
-		this.renderEngine.addSystem(new PlanetRenderSystem(viewport));
-		this.renderEngine.addSystem(new PlanetAnimationSystem());
-		this.renderEngine
-				.addSystem(new SystemRenderPlanetScanProgress(viewport));
+		this.renderEngine.addSystem(new SystemLineRenderer(viewport));
+		this.renderEngine.addSystem(new SystemPlanetRenderer(viewport));
+		this.renderEngine.addSystem(new SystemPlanetAnimation());
+
+		this.renderEngine.addSystem(new SystemPlanetNotificationRenderer(
+				viewport, noScaleViewport));
+
+		this.renderEngine.addSystem(new SystemPlanetScanRenderer(viewport));
 	}
 
 	private void createLineBetweenPlanetsEntities() {
@@ -163,7 +175,7 @@ public class RenderEngine {
 		this.renderEngine.addEntity(e);
 	}
 
-	public void render(float deltaTime) {
-		this.renderEngine.update(deltaTime);
+	public void resize(int width, int height) {
+		this.noScaleViewport.update(width, height, false);
 	}
 }

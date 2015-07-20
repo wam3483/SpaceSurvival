@@ -11,6 +11,7 @@ import maxfat.spacesurvival.gamesystem.SystemPlanetPopulationUpdater;
 import maxfat.spacesurvival.gamesystem.SystemPlayerGoldUpdater;
 import maxfat.spacesurvival.gamesystem.SystemRefueling;
 import maxfat.spacesurvival.gamesystem.SystemScanningUpdater;
+import maxfat.spacesurvival.gamesystem.SystemScanningUpdater.ScanCompleteListener;
 import maxfat.spacesurvival.gamesystem.SystemSpaceTravel;
 
 import com.badlogic.ashley.core.Engine;
@@ -21,17 +22,31 @@ import com.badlogic.ashley.utils.ImmutableArray;
 public class GameStateEngine {
 	private final Engine engine;
 	private final Graph<PlanetData> graph;
+	private GameStateListener gameListener;
 
-	public GameStateEngine(Engine engine, Graph<PlanetData> graph) {
+	public GameStateEngine(Engine myEngine, Graph<PlanetData> graph) {
 		this.graph = graph;
-		this.engine = engine;
+		this.engine = myEngine;
 
 		this.engine.addSystem(new SystemBattle());
 		this.engine.addSystem(new SystemSpaceTravel());
 		this.engine.addSystem(new SystemRefueling());
 		this.engine.addSystem(new SystemPlanetPopulationUpdater());
 		this.engine.addSystem(new SystemPlayerGoldUpdater());
-		this.engine.addSystem(new SystemScanningUpdater());
+		SystemScanningUpdater scanningUpdater = new SystemScanningUpdater();
+		scanningUpdater.listener = new ScanCompleteListener() {
+			@Override
+			public void scanComplete(Entity scanEntity,
+					PlanetComponent planetScanned) {
+				engine.removeEntity(scanEntity);
+				gameListener.onPlanetScanComplete(scanEntity);
+			}
+		};
+		this.engine.addSystem(scanningUpdater);
+	}
+
+	public void setListener(GameStateListener gameListener) {
+		this.gameListener = gameListener;
 	}
 
 	public Graph<PlanetData> getPlanetGraph() {
@@ -86,4 +101,7 @@ public class GameStateEngine {
 		this.engine.update(time);
 	}
 
+	public interface GameStateListener {
+		void onPlanetScanComplete(Entity planetScanEntity);
+	}
 }

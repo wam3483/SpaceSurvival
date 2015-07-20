@@ -13,7 +13,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class PlanetRenderSystem extends EntitySystem {
+public class SystemPlanetRenderer extends EntitySystem {
 	private ImmutableArray<Entity> entities;
 	PolygonSpriteBatch spriteBatch;
 	private ComponentMapper<PositionComponent> positionMapper = ComponentMapper
@@ -25,7 +25,7 @@ public class PlanetRenderSystem extends EntitySystem {
 
 	Viewport viewport;
 
-	public PlanetRenderSystem(Viewport viewport) {
+	public SystemPlanetRenderer(Viewport viewport) {
 		this.spriteBatch = new PolygonSpriteBatch();
 		this.viewport = viewport;
 	}
@@ -62,8 +62,18 @@ public class PlanetRenderSystem extends EntitySystem {
 				if (onlyRenderFirst)
 					break;
 			}
+			renderExclaimation(entity, position.x, position.y, deltaTime);
 		}
 		this.spriteBatch.end();
+	}
+
+	private void renderExclaimation(Entity e, float x, float y, float deltaTime) {
+		PlanetIconComponent comp = e
+				.getComponent(PlanetIconComponent.class);
+		if (comp != null) {
+			comp.exclaimationActor.act(deltaTime);
+			comp.exclaimationActor.draw(this.spriteBatch, 1);
+		}
 	}
 
 	public void dispose() {

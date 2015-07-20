@@ -54,13 +54,16 @@ public class SinglePlayerRandomGameSetup {
 		this.graph = new Graph<PlanetData>(node);
 
 		// create game state objects and render objects.
-		Viewport gameViewport = new FitViewport(GameConstants.ScreenWidth,
-				GameConstants.ScreenHeight);
+		Viewport gameViewport = new FitViewport(GameConstants.getScreenWidth(),
+				GameConstants.getScreenHeight());
+		Viewport uiViewport = new FitViewport(GameConstants.getScreenWidth(),
+				GameConstants.getScreenHeight());
 
 		// create this local player. give him a free planet.
 		PlayerComponent playerComp = new PlayerComponent(
 				RandomUtil.getUniqueId());
-		this.gameManager = new GameManager(graph, gameViewport, playerComp);
+		this.gameManager = new GameManager(graph, gameViewport, uiViewport,
+				playerComp);
 
 		@SuppressWarnings("unchecked")
 		ImmutableArray<Entity> ary = gameManager.getPlanets();

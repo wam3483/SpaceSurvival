@@ -1,8 +1,13 @@
 package maxfat.spacesurvival.screens;
 
 public class GameConstants {
-	public static final int ScreenWidth = 800;
-	public static final int ScreenHeight = 480;
+	public static int getScreenWidth() {
+		return 800;
+	}
+
+	public static int getScreenHeight() {
+		return 480;
+	}
 
 	public class PlanetConstants {
 		public static final float MinTemperatureC = -273;

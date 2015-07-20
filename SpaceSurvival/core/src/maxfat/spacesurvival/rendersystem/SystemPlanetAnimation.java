@@ -9,7 +9,7 @@ import com.badlogic.ashley.utils.ImmutableArray;
 import com.badlogic.gdx.graphics.g2d.PolygonRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-public class PlanetAnimationSystem extends EntitySystem {
+public class SystemPlanetAnimation extends EntitySystem {
 
 	private ImmutableArray<Entity> entities;
 	private ComponentMapper<AnimatingPolygonRegionComponent> animateMapper = ComponentMapper

@@ -12,7 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class LineRenderSystem extends EntitySystem {
+public class SystemLineRenderer extends EntitySystem {
 	private ShapeRenderer shapeRenderer;
 	private ImmutableArray<Entity> entities;
 
@@ -22,7 +22,7 @@ public class LineRenderSystem extends EntitySystem {
 			.getFor(LineComponent.class);
 	Viewport viewport;
 
-	public LineRenderSystem(Viewport viewport) {
+	public SystemLineRenderer(Viewport viewport) {
 		this.shapeRenderer = new ShapeRenderer();
 		this.viewport = viewport;
 	}

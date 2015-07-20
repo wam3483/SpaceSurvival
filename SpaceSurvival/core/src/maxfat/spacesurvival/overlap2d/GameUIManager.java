@@ -2,9 +2,16 @@ package maxfat.spacesurvival.overlap2d;
 
 import java.util.ArrayList;
 
+import maxfat.spacesurvival.rendersystem.TextureActor;
+import maxfat.util.random.RandomUtil;
+
 import com.badlogic.ashley.core.Entity;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Vector2;
@@ -16,6 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.uwsoft.editor.renderer.SceneLoader;
 import com.uwsoft.editor.renderer.actor.CompositeItem;
@@ -23,22 +31,80 @@ import com.uwsoft.editor.renderer.actor.IBaseItem;
 import com.uwsoft.editor.renderer.actor.ImageItem;
 import com.uwsoft.editor.renderer.actor.LabelItem;
 
-public class GameDialogs {
+public class GameUIManager {
 	private final StageStack displayStack;
 	private final Viewport viewport;
 	private final Batch batch;
 	private final SceneLoader sceneLoader;
 	private final ShapeRenderer shapeRenderer;
+	private final AssetManager assetManager;
 	float dialogAnimationSpeed = .5f;
 
-	public GameDialogs(StageStack stack, Viewport viewport, Batch batch) {
+	public GameUIManager(StageStack stack, Viewport viewport, Batch batch,
+			AssetManager assetManager) {
 		this.displayStack = stack;
 		this.viewport = viewport;
 		this.batch = batch;
+		this.assetManager = assetManager;
 		CustomResourceManager resourceManager = new CustomResourceManager();
 		resourceManager.initAllResources();
 		this.sceneLoader = new SceneLoader(resourceManager);
 		this.shapeRenderer = new ShapeRenderer();
+	}
+
+	public Array<Actor> getPlanetScanActors(Vector2 center) {
+		TextureAtlas atlas = assetManager.get("scanProgress.atlas",
+				TextureAtlas.class);
+		Array<AtlasRegion> ary = atlas.getRegions();
+		Array<Actor> actors = new Array<Actor>();
+		float scaleMultiplier = .5f;
+		float initialAnimationDuration = scaleMultiplier * ary.size;
+		float baseAlpha = .7f;
+		for (int i = 0; i < ary.size; i++) {
+			TextureRegion region = ary.get(i);
+			Actor a = new TextureActor(region);
+			a.setColor(new Color(Color.rgba8888(.25f, .5f, .66f, baseAlpha)));
+			a.setPosition(center.x - region.getRegionWidth() / 2, center.y
+					- region.getRegionHeight() / 2);
+			float rotateSpeed = 10 * (i + 1);
+			float initialRotation = (float) RandomUtil.randomBetweenRanges(0,
+					360);
+			a.setRotation(initialRotation);
+			a.setScale(0);
+			Action extraAction = null;
+			if (i == 0) {
+				Action scaleUp = Actions.parallel(
+						Actions.alpha(baseAlpha / 2, .5f),
+						Actions.scaleBy(1, 1, .5f, Interpolation.swingOut));
+				Action scaleDown = Actions.parallel(
+						Actions.alpha(baseAlpha, 1f),
+						Actions.scaleTo(1, 1, 1f, Interpolation.linear));
+				extraAction = Actions.sequence(Actions
+						.delay(initialAnimationDuration), Actions
+						.forever(Actions.sequence(Actions.delay(5), scaleUp,
+								scaleDown)));
+			} else {
+				extraAction = Actions.delay(0);
+			}
+			float scaleDelay = i * scaleMultiplier;
+			a.addAction(Actions.sequence(
+					Actions.delay(scaleDelay),
+					Actions.scaleTo(1, 1, .5f, new Interpolation.SwingOut(10)),
+					Actions.parallel(extraAction,
+							Actions.forever(Actions.rotateBy(rotateSpeed, 1)))));
+			actors.add(a);
+		}
+		return actors;
+	}
+
+	public Actor getPlanetExclaimationIcon() {
+		this.sceneLoader.loadScene("PlanetNewInfo");
+		CompositeItem root = sceneLoader.getRoot();
+		// root.setTransform(false);
+		root.setScale(0, 0);
+		root.addAction(Actions.scaleTo(1, 1, .5f, Interpolation.swingOut));
+		root.setOrigin(root.getWidth() / 2, root.getHeight() / 2);
+		return root;
 	}
 
 	private IBaseItem findItemByIdentifier(String id, ArrayList<IBaseItem> items) {
@@ -149,6 +215,12 @@ public class GameDialogs {
 				planetFrameDelay, planetFrameMoveDist);
 
 		// set up button animations and listeners
+		CompositeItem btnClose = (CompositeItem) findItemByIdentifier(
+				"btnClose", allItems);
+		Action btnCloseAction = Actions.sequence(getDialogCloseAnimation(),
+				new DialogDisposeAndCallback(stage, null));
+		btnClose.addListener(new CloseDialogClickListener(root, btnCloseAction));
+
 		CompositeItem btnScan = (CompositeItem) findItemByIdentifier(
 				"btnScanPlanet", allItems);
 		Action closeAnimation = getDialogCloseAnimation();

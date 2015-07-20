@@ -14,29 +14,28 @@ public class SystemScanningUpdater extends IteratingSystem {
 		}
 	};
 
-	private ComponentMapper<ScanComponent> scanMapper = ComponentMapper
-			.getFor(ScanComponent.class);
+	private ComponentMapper<ScanProgressComponent> scanMapper = ComponentMapper
+			.getFor(ScanProgressComponent.class);
 	private ComponentMapper<PlanetComponent> planetMapper = ComponentMapper
 			.getFor(PlanetComponent.class);
 
 	@SuppressWarnings("unchecked")
 	public SystemScanningUpdater() {
-		super(Family.all(ScanComponent.class, PlanetComponent.class).get());
+		super(Family.all(ScanProgressComponent.class, PlanetComponent.class).get());
 		listener = NullListener;
 	}
 
 	@Override
 	protected void processEntity(Entity entity, float deltaTime) {
-		ScanComponent scan = scanMapper.get(entity);
+		ScanProgressComponent scan = scanMapper.get(entity);
 		PlanetComponent planet = planetMapper.get(entity);
 		scan.scanProgress += deltaTime;
 		if (scan.scanProgress >= planet.scanTime) {
-			entity.remove(ScanComponent.class);
 			this.listener.scanComplete(entity, planet);
 		}
 	}
 
 	public interface ScanCompleteListener {
-		void scanComplete(Entity planetEntity, PlanetComponent planetScanned);
+		void scanComplete(Entity scanEntity, PlanetComponent planetScanned);
 	}
 }
