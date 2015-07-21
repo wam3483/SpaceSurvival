@@ -16,6 +16,9 @@ import com.uwsoft.editor.renderer.script.IScript;
 
 public class SimpleButtonScript implements IScript {
 
+	public SimpleButtonScript() {
+	}
+
 	protected CompositeItem buttonHolder;
 
 	protected boolean isDown = false;

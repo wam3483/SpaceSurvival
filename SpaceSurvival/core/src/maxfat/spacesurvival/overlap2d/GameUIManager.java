@@ -53,7 +53,7 @@ public class GameUIManager {
 	}
 
 	public Array<Actor> getPlanetScanActors(Vector2 center) {
-		TextureAtlas atlas = assetManager.get("scanProgress.atlas",
+		TextureAtlas atlas = assetManager.get("images/scanProgress.atlas",
 				TextureAtlas.class);
 		Array<AtlasRegion> ary = atlas.getRegions();
 		Array<Actor> actors = new Array<Actor>();
