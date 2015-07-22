@@ -84,8 +84,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getBirthRate() {
-			return planetComp.birthBonus + popComp.birthPercentPerTurn
-					+ this.getFoodBirthBonus();
+			return popComp.birthPercentPerTurn + this.getFoodBirthBonus();
 		}
 
 		public void addPopulation(float pop) {
@@ -106,8 +105,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getFoodProduced() {
-			float foodGeneratedPerFarmer = this.planetComp.getFoodBonus()
-					+ popComp.foodPerFarmerPerTurn;
+			float foodGeneratedPerFarmer = popComp.foodPerFarmerPerTurn;
 			float foodProduced = foodGeneratedPerFarmer
 					* planetComp.farmingPopulation;
 			return foodProduced;

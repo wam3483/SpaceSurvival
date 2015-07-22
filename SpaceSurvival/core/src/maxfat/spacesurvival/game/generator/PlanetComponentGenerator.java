@@ -18,9 +18,8 @@ public class PlanetComponentGenerator {
 		PlanetComponent comp = new PlanetComponent(new Vector2());
 		comp.temperatureCelsius = params.temperatureProvider.getValue();
 		comp.percentWater = params.waterProvider.getValue();
-		comp.foodBonus = params.foodBonusProvider.getValue();
-		comp.birthBonus = params.birthBonusProvider.getValue();
-		comp.maxPopulation = params.maxPopProvider.getValue();
+		comp.amountGold = params.goldProvider.getValue();
+		comp.amountFood = params.foodProvider.getValue();
 		comp.population = params.currentPopulationProvider.getValue();
 		comp.name = this.nameProvider.getPlanetName(comp);
 		return comp;
@@ -29,8 +28,8 @@ public class PlanetComponentGenerator {
 	public static class PlanetParams {
 		public RandomFloatProvider temperatureProvider;
 		public RandomFloatProvider waterProvider;
-		public RandomFloatProvider foodBonusProvider;
-		public RandomFloatProvider maxPopProvider;
+		public RandomIntProvider foodProvider;
+		public RandomIntProvider goldProvider;
 		public RandomFloatProvider birthBonusProvider;
 		public RandomFloatProvider currentPopulationProvider;
 	}

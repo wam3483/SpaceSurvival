@@ -26,9 +26,14 @@ public class SystemPlayerGoldUpdater extends IteratingSystem {
 		PopulationComponent pop = this.populationMapper.get(entity);
 		PlayerComponent player = this.playerMapper.get(entity);
 
-		float goldPerPerson = pop.goldEarnedPerIdlePersonPerTurn
-				+ planet.goldBonus;
+		float goldPerPerson = pop.goldMiningSpeed;
 		long earnedGold = (long) (planet.getIdlePopulation() * goldPerPerson);
-		player.gold += earnedGold;
+		if (planet.amountGold < earnedGold) {
+			player.gold += planet.amountGold;
+			planet.amountGold = 0;
+		} else {
+			player.gold += earnedGold;
+			planet.amountGold -= earnedGold;
+		}
 	}
 }

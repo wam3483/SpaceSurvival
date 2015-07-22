@@ -11,14 +11,12 @@ public class PlanetComponent extends Component {
 
 	public float scanTime = 1;
 	public float population;
-	public float maxPopulation;
 	public float farmingPopulation;
 
 	public float naturalDeathPercent;
-	public float birthBonus;
-	public float foodBonus;
-	public float goldBonus;
-
+	public long amountGold;
+	public long amountFood;
+	
 	public float percentWater;
 	public float temperatureCelsius;
 
@@ -46,25 +44,15 @@ public class PlanetComponent extends Component {
 		return true;
 	}
 
-	public float getBirthBonus() {
-		return this.birthBonus;
-	}
-
-	public float getFoodBonus() {
-		return this.foodBonus;
-	}
-
 	public float getNaturalDeathPercent() {
 		return this.naturalDeathPercent;
 	}
 
 	public void setFarmingPopulation(float farmingPop) {
-		farmingPop = MathUtils.clamp(farmingPop, 0, this.maxPopulation);
 		this.farmingPopulation = farmingPop;
 	}
 
 	public void addPeople(float people) {
-		this.population = MathUtils.clamp(this.population + people, 0,
-				this.maxPopulation);
+		this.population += people;
 	}
 }

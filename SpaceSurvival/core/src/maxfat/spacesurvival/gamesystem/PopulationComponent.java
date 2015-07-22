@@ -9,7 +9,7 @@ public class PopulationComponent extends Component {
 	public float resistienceToNaturalDeath;
 	public float foodPerFarmerPerTurn;
 	public float foodEatenPerPersonPerTurn;
-	public float goldEarnedPerIdlePersonPerTurn;
+	public float goldMiningSpeed;
 
 	public float extrafoodBirthBonus;
 
@@ -21,6 +21,7 @@ public class PopulationComponent extends Component {
 		this.birthPercentPerTurn = birth;
 		this.starveChancePerTurn = starve;
 		this.resistienceToNaturalDeath = naturalResist;
-		this.goldEarnedPerIdlePersonPerTurn = 1;
+		this.foodEatenPerPersonPerTurn = 1;
+		this.goldMiningSpeed = 1;
 	}
 }
