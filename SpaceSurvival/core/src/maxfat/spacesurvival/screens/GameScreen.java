@@ -161,8 +161,9 @@ public class GameScreen implements Screen {
 						scanPlanetDialog.close();
 					}
 				};
-				gameUI.showUnknownPlanetDialog(entity, scanPlanetRunnable,
-						claimPlanetCallback);
+				gameUI.showLimitedInfoPlanetDialog(entity);
+//				gameUI.showUnknownPlanetDialog(entity, scanPlanetRunnable,
+//						claimPlanetCallback);
 			}
 		}
 

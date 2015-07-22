@@ -2,6 +2,8 @@ package maxfat.spacesurvival.overlap2d;
 
 import java.util.ArrayList;
 
+import maxfat.spacesurvival.gamesystem.PlanetComponent;
+import maxfat.spacesurvival.gamesystem.PopulationComponent;
 import maxfat.spacesurvival.rendersystem.TextureActor;
 import maxfat.util.random.RandomUtil;
 
@@ -18,7 +20,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -107,22 +108,6 @@ public class GameUIManager {
 		return root;
 	}
 
-	private IBaseItem findItemByIdentifier(String id, ArrayList<IBaseItem> items) {
-		for (IBaseItem item : items) {
-			if (item.getDataVO().itemIdentifier.equals(id)) {
-				return item;
-			}
-			if (item.isComposite()) {
-				CompositeItem cmp = (CompositeItem) item;
-				IBaseItem recursedItem = findItemByIdentifier(id,
-						cmp.getItems());
-				if (recursedItem != null)
-					return recursedItem;
-			}
-		}
-		return null;
-	}
-
 	private void centerItemInStage(Stage stage, CompositeItem item) {
 		Vector3 pos = stage.getCamera().position;
 		float x = (pos.x - item.getWidth() / 2);
@@ -172,6 +157,41 @@ public class GameUIManager {
 		frameActor.addAction(action);
 	}
 
+	public void showLimitedInfoPlanetDialog(Entity planetEntity) {
+		this.sceneLoader.loadScene("PlanetLimitedInfoDialog");
+		final CompositeItem root = sceneLoader.getRoot();
+
+		PlanetComponent planetComp = planetEntity
+				.getComponent(PlanetComponent.class);
+		PopulationComponent popComp = planetEntity
+				.getComponent(PopulationComponent.class);
+		PlanetStatBarScript.Attributes attr = new PlanetStatBarScript.Attributes();
+		attr.farming = popComp.foodPerFarmerPerTurn
+				/ popComp.foodEatenPerPersonPerTurn / 10f;
+		PlanetStatBarScript statBarScript = new PlanetStatBarScript(
+				this.assetManager, attr);
+		root.addScriptTo("gauge", statBarScript);
+		ArrayList<IBaseItem> allItems = root.getItems();
+
+		LabelItem popName = root.getLabelById("lblPopulationName");
+		popName.setText(popComp.name);
+
+		LabelItem planetName = root.getLabelById("lblPlanetName");
+		planetName.setText(planetComp.name);
+
+		final Stage stage = new Stage(this.viewport, this.batch);
+
+		// set up button animations and listeners
+		CompositeItem btnClose = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnClose", allItems);
+		Action btnCloseAction = Actions.sequence(getDialogCloseAnimation(),
+				new DialogDisposeAndCallback(stage, null));
+		btnClose.addListener(new CloseDialogClickListener(root, btnCloseAction));
+
+		this.centerItemInStage(stage, root);
+		pushDialog(stage, root);
+	}
+
 	public void showUnknownPlanetDialog(Entity planetEntity,
 			final Runnable scanPlanetCallback,
 			final ICallback<IDialog> capturePlanetCallback) {
@@ -181,55 +201,44 @@ public class GameUIManager {
 		root.addScriptTo("SimpleButton", yesNoScript);
 		ArrayList<IBaseItem> allItems = root.getItems();
 
-		ImageItem planetPlaceholder = (ImageItem) findItemByIdentifier(
-				"planetPlaceholder", allItems);
-		float x = planetPlaceholder.getX();
-		float y = planetPlaceholder.getY();
-		int zIndex = planetPlaceholder.getZIndex();
-		float width = planetPlaceholder.getWidth()
-				* planetPlaceholder.getScaleX();
-		float height = planetPlaceholder.getHeight()
-				* planetPlaceholder.getScaleY();
-		Group group = planetPlaceholder.getParent();
-		group.removeActor(planetPlaceholder);
-
+		// add image of planet in center
+		ImageItem planetPlaceholder = (ImageItem) Overlap2DUtil
+				.findItemByIdentifier("planetPlaceholder", allItems);
 		PlanetTileActor planetRenderer = new PlanetTileActor(planetEntity,
 				this.shapeRenderer);
-		group.addActor(planetRenderer);
-		planetRenderer.setBounds(x, y, width, height);
-		planetRenderer.setZIndex(zIndex);
+		Overlap2DUtil.replaceElement(planetPlaceholder, planetRenderer);
 
 		// fade in green corners around planet.
 		float planetFrameMoveDist = 50;
 		float planetFrameDelay = dialogAnimationSpeed / 2;
 
 		final Stage stage = new Stage(this.viewport, this.batch);
-		ImageItem topRightDisplay = (ImageItem) findItemByIdentifier(
-				"topRightDisplay", allItems);
+		ImageItem topRightDisplay = (ImageItem) Overlap2DUtil
+				.findItemByIdentifier("topRightDisplay", allItems);
 		createPlanetFrameAction(topRightDisplay, planetRenderer,
 				planetFrameDelay, planetFrameMoveDist);
 
-		ImageItem bottomLeftDisplay = (ImageItem) findItemByIdentifier(
-				"bottomLeftDisplay", allItems);
+		ImageItem bottomLeftDisplay = (ImageItem) Overlap2DUtil
+				.findItemByIdentifier("bottomLeftDisplay", allItems);
 		createPlanetFrameAction(bottomLeftDisplay, planetRenderer,
 				planetFrameDelay, planetFrameMoveDist);
 
 		// set up button animations and listeners
-		CompositeItem btnClose = (CompositeItem) findItemByIdentifier(
-				"btnClose", allItems);
+		CompositeItem btnClose = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnClose", allItems);
 		Action btnCloseAction = Actions.sequence(getDialogCloseAnimation(),
 				new DialogDisposeAndCallback(stage, null));
 		btnClose.addListener(new CloseDialogClickListener(root, btnCloseAction));
 
-		CompositeItem btnScan = (CompositeItem) findItemByIdentifier(
-				"btnScanPlanet", allItems);
+		CompositeItem btnScan = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnScanPlanet", allItems);
 		Action closeAnimation = getDialogCloseAnimation();
 		Action scanAction = Actions.sequence(closeAnimation,
 				new DialogDisposeAndCallback(stage, scanPlanetCallback));
 		btnScan.addListener(new CloseDialogClickListener(root, scanAction));
 
-		CompositeItem btnCapture = (CompositeItem) findItemByIdentifier(
-				"btnCapturePlanet", allItems);
+		CompositeItem btnCapture = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnCapturePlanet", allItems);
 		btnCapture.addListener(new ClickListener() {
 			@Override
 			public void touchUp(InputEvent event, float x, float y,
@@ -271,20 +280,20 @@ public class GameUIManager {
 				new DialogDisposeAndCallback(stage, noRun));
 
 		ArrayList<IBaseItem> allItems = root.getItems();
-		CompositeItem btnYes = (CompositeItem) findItemByIdentifier("btnYes",
-				allItems);
+		CompositeItem btnYes = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnYes", allItems);
 		btnYes.addListener(new CloseDialogClickListener(root, yesCloseAction));
 
-		CompositeItem btnNo = (CompositeItem) findItemByIdentifier("btnNo",
-				allItems);
+		CompositeItem btnNo = (CompositeItem) Overlap2DUtil
+				.findItemByIdentifier("btnNo", allItems);
 		btnNo.addListener(new CloseDialogClickListener(root, noCloseAction));
 
 		LabelItem lblYes = btnYes.getLabelById("text");
 		lblYes.setText(yes);
 		LabelItem lblNo = btnNo.getLabelById("text");
 		lblNo.setText(no);
-		LabelItem lblMessage = (LabelItem) findItemByIdentifier("lblMessage",
-				allItems);
+		LabelItem lblMessage = (LabelItem) Overlap2DUtil.findItemByIdentifier(
+				"lblMessage", allItems);
 		lblMessage.setText(message);
 
 		pushDialog(stage, root);
