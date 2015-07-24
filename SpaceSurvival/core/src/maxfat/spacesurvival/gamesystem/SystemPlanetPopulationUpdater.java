@@ -59,7 +59,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 
 		public float getFoodBirthBonus() {
 			if (this.getFoodProduced() == this.getRequiredFood() * 2) {
-				return this.popComp.extrafoodBirthBonus;
+				return this.popComp.extrafoodReproductionBonus;
 			} else {
 				return 0;
 			}
@@ -70,13 +70,24 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 			this.popComp = popComp;
 		}
 
+		/**
+		 * Starve chance per person is reduced by .1 for each point of
+		 * hardiness.
+		 * 
+		 * @return
+		 */
 		public float getStarvationPercent() {
-			return this.popComp.starveChancePerTurn;
+			float normalized = 1 - popComp.hardiness
+					/ (float) PopulationRestrictions.Hardiness.range();
+			float min = PopulationRestrictions.StarveChance.getMin();
+			float chance = min + normalized
+					* PopulationRestrictions.StarveChance.range();
+			return chance;
 		}
 
 		public float getPercentDeath() {
 			float death = this.planetComp.getNaturalDeathPercent();
-			float popDeath = this.popComp.resistienceToNaturalDeath;
+			float popDeath = this.popComp.hardiness;
 			death -= popDeath;
 			if (death < 0)
 				death = MIN_DEATH;
@@ -84,7 +95,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getBirthRate() {
-			return popComp.birthPercentPerTurn + this.getFoodBirthBonus();
+			return popComp.reproductionRate + this.getFoodBirthBonus();
 		}
 
 		public void addPopulation(float pop) {
@@ -105,7 +116,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getFoodProduced() {
-			float foodGeneratedPerFarmer = popComp.foodPerFarmerPerTurn;
+			float foodGeneratedPerFarmer = popComp.foodEarnedPerFarmer;
 			float foodProduced = foodGeneratedPerFarmer
 					* planetComp.farmingPopulation;
 			return foodProduced;

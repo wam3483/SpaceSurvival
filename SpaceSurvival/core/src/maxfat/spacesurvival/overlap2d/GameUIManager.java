@@ -166,7 +166,7 @@ public class GameUIManager {
 		PopulationComponent popComp = planetEntity
 				.getComponent(PopulationComponent.class);
 		PlanetStatBarScript.Attributes attr = new PlanetStatBarScript.Attributes();
-		attr.farming = popComp.foodPerFarmerPerTurn
+		attr.farming = popComp.foodEarnedPerFarmer
 				/ popComp.foodEatenPerPersonPerTurn / 10f;
 		PlanetStatBarScript statBarScript = new PlanetStatBarScript(
 				this.assetManager, attr);

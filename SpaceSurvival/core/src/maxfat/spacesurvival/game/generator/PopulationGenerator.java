@@ -1,13 +1,17 @@
 package maxfat.spacesurvival.game.generator;
 
-import maxfat.graph.FloatRange;
+import maxfat.graph.IntRange;
 import maxfat.spacesurvival.gamesystem.PlanetComponent;
 import maxfat.spacesurvival.gamesystem.PopulationComponent;
+import maxfat.spacesurvival.gamesystem.PopulationRestrictions;
 import maxfat.util.random.IRandom;
+import maxfat.util.random.RandomUtil;
+
+import com.badlogic.gdx.math.MathUtils;
 
 public class PopulationGenerator {
 
-	PopulationParams params;
+	private final PopulationParams params;
 	private final PopulationNameService populationNameGen;
 
 	public PopulationGenerator(PopulationParams params,
@@ -21,41 +25,96 @@ public class PopulationGenerator {
 		PopulationComponent pop = null;
 
 		pop = new PopulationComponent();
-		pop.birthPercentPerTurn = params.birthRange.getValue();
-		pop.extrafoodBirthBonus = params.extrafoodBirthBonusRange.getValue();
-		pop.foodEatenPerPersonPerTurn = params.foodEatenPerPersonPerTurnRange
-				.getValue();
-		pop.foodPerFarmerPerTurn = params.foodPerFarmerPerTurnRange.getValue();
-		pop.resistienceToNaturalDeath = params.naturalDeathResistanceRange
-				.getValue();
-		pop.starveChancePerTurn = params.starveRange.getValue();
+		pop.extrafoodReproductionBonus = 1f;
 		pop.name = this.populationNameGen.getPopulationName(planetComp, pop);
+
+		int count = 0;
+		int totalPoints = getTotalPoints();
+
+		// loop until all points have been used.
+		// 50% chance each iteration that an attribute will get a point.
+		while (totalPoints > 0) {
+			boolean shouldAddPoint = RandomUtil.randomBool(params.random);
+			boolean addedPoint = false;
+			if (shouldAddPoint) {
+				switch (count) {
+				case 0:
+					if (pop.reproductionRate < params.reproductionRange
+							.getMax()) {
+						addedPoint = true;
+						pop.reproductionRate++;
+					}
+					break;
+				case 1:
+					if (pop.foodEarnedPerFarmer < params.foodPerFarmerRange
+							.getMax()) {
+						addedPoint = true;
+						pop.foodEarnedPerFarmer++;
+					}
+					break;
+				case 2:
+					if (pop.hardiness < params.hardinessRange.getMax()) {
+						addedPoint = true;
+						pop.hardiness++;
+					}
+					break;
+				case 3:
+					if (pop.goldMiningSpeed < params.miningSpeedRange.getMax()) {
+						addedPoint = true;
+						pop.goldMiningSpeed++;
+					}
+					break;
+				}
+			}
+			if (addedPoint) {
+				totalPoints--;
+			}
+			count = (count + 1) % 4;
+		}
+
+		pop.foodEarnedPerFarmer = MathUtils.clamp(pop.foodEarnedPerFarmer,
+				params.foodPerFarmerRange.getMin(),
+				params.foodPerFarmerRange.getMax());
+		pop.hardiness = MathUtils.clamp(pop.hardiness,
+				params.hardinessRange.getMin(), params.hardinessRange.getMax());
+		pop.goldMiningSpeed = MathUtils.clamp(pop.goldMiningSpeed,
+				params.miningSpeedRange.getMin(),
+				params.miningSpeedRange.getMax());
 
 		return pop;
 	}
 
-	public static class PopulationParams {
-		RandomFloatProvider birthRange;
-		RandomFloatProvider starveRange;
-		RandomFloatProvider naturalDeathResistanceRange;
-		RandomFloatProvider foodPerFarmerPerTurnRange;
-		RandomFloatProvider foodEatenPerPersonPerTurnRange;
+	int getTotalPoints() {
+		double gaussian = params.random.nextGaussian();
+		if (gaussian < 0)
+			gaussian *= -1;
 
-		RandomFloatProvider extrafoodBirthBonusRange;
+		int maxPoints = params.reproductionRange.getMax()
+				+ params.hardinessRange.getMax()
+				+ params.miningSpeedRange.getMax()
+				+ params.foodPerFarmerRange.getMax();
+		
+		// around 10% of samples fall outside [1.7, -1.7]
+		// this means ~10% of populations will be maxed
+		float maxPointsMark = 1.7f;
+		float normal = (float) MathUtils.clamp(gaussian / maxPointsMark, 0, 1);
+		int totalPointsAvailable = (int) (normal * maxPoints);
+		return totalPointsAvailable;
+	}
+
+	public static class PopulationParams {
+		protected IRandom random;
+		IntRange reproductionRange;
+		IntRange hardinessRange;
+		IntRange foodPerFarmerRange;
+		IntRange miningSpeedRange;
 
 		public PopulationParams(IRandom random) {
-			this.birthRange = new RandomFloatProvider(random, new FloatRange(1,
-					10));
-			this.starveRange = new RandomFloatProvider(random, new FloatRange(
-					1, 10));
-			this.naturalDeathResistanceRange = new RandomFloatProvider(random,
-					new FloatRange(1, 10));
-			this.foodPerFarmerPerTurnRange = new RandomFloatProvider(random,
-					new FloatRange(0, 1));
-			this.foodEatenPerPersonPerTurnRange = new RandomFloatProvider(
-					random, new FloatRange(1, 10));
-			this.extrafoodBirthBonusRange = new RandomFloatProvider(random,
-					new FloatRange(1, 10));
+			this.random = random;
+			this.reproductionRange = PopulationRestrictions.Reproduction;
+			this.hardinessRange = PopulationRestrictions.Hardiness;
+			this.foodPerFarmerRange = PopulationRestrictions.FoodProduction;
+			this.miningSpeedRange = PopulationRestrictions.GoldProduction;
 		}
 	}
 }

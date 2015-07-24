@@ -4,24 +4,17 @@ import com.badlogic.ashley.core.Component;
 
 public class PopulationComponent extends Component {
 	public String name;
-	public float birthPercentPerTurn;
-	public float starveChancePerTurn;
-	public float resistienceToNaturalDeath;
-	public float foodPerFarmerPerTurn;
-	public float foodEatenPerPersonPerTurn;
-	public float goldMiningSpeed;
+	public int reproductionRate;
+	public int hardiness;
+	public int foodEarnedPerFarmer;
+	public int foodEatenPerPersonPerTurn;
+	public int goldMiningSpeed;
 
-	public float extrafoodBirthBonus;
+	public float extrafoodReproductionBonus;
 
-	public PopulationComponent() {
-		this(.1f, .1f, .1f);
-	}
-
-	public PopulationComponent(float birth, float starve, float naturalResist) {
-		this.birthPercentPerTurn = birth;
-		this.starveChancePerTurn = starve;
-		this.resistienceToNaturalDeath = naturalResist;
-		this.foodEatenPerPersonPerTurn = 1;
-		this.goldMiningSpeed = 1;
+	public String toString() {
+		return "[life=" + reproductionRate
+				+ ", tough=" + hardiness + ", mine=" + goldMiningSpeed
+				+ ", food=" + foodEarnedPerFarmer + "]";
 	}
 }

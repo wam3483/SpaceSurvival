@@ -21,6 +21,7 @@ public class PlanetComponentGenerator {
 		comp.amountGold = params.goldProvider.getValue();
 		comp.amountFood = params.foodProvider.getValue();
 		comp.population = params.currentPopulationProvider.getValue();
+		comp.naturalDeathPercent = params.dangerLevelProvider.getValue();
 		comp.name = this.nameProvider.getPlanetName(comp);
 		return comp;
 	}
@@ -32,5 +33,6 @@ public class PlanetComponentGenerator {
 		public RandomIntProvider goldProvider;
 		public RandomFloatProvider birthBonusProvider;
 		public RandomFloatProvider currentPopulationProvider;
+		public RandomIntProvider dangerLevelProvider;
 	}
 }
