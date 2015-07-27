@@ -36,7 +36,7 @@ darkCircle
   index: -1
 darkgb
   rotate: false
-  xy: 208, 111
+  xy: 208, 74
   size: 32, 32
   split: 10, 10, 9, 11
   orig: 32, 32
@@ -79,9 +79,9 @@ gem
   index: -1
 heart
   rotate: false
-  xy: 208, 77
-  size: 32, 32
-  orig: 32, 32
+  xy: 208, 108
+  size: 35, 35
+  orig: 35, 35
   offset: 0, 0
   index: -1
 leftConnector

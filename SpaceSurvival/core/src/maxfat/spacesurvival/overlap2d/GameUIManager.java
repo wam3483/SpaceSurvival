@@ -165,31 +165,39 @@ public class GameUIManager {
 				.getComponent(PlanetComponent.class);
 		PopulationComponent popComp = planetEntity
 				.getComponent(PopulationComponent.class);
-		PlanetStatBarScript.Attributes attr = new PlanetStatBarScript.Attributes();
-		attr.farming = popComp.foodEarnedPerFarmer
-				/ popComp.foodEatenPerPersonPerTurn / 10f;
-		PlanetStatBarScript statBarScript = new PlanetStatBarScript(
-				this.assetManager, attr);
-		root.addScriptTo("gauge", statBarScript);
-		ArrayList<IBaseItem> allItems = root.getItems();
+		// TODO need to handle case where planet has no population.
+		if (popComp != null) {
+			PlanetStatBarScript.Attributes attr = new PlanetStatBarScript.Attributes();
+			attr.farming = popComp.foodEarnedPerFarmer;
+			attr.hardiness = popComp.hardiness;
+			attr.reproduction = popComp.reproductionRate;
+			attr.amountGold = planetComp.amountGold;
+			attr.amountFood = planetComp.amountFood;
+			
+			PlanetStatBarScript statBarScript = new PlanetStatBarScript(
+					this.assetManager, attr);
+			root.addScriptTo("gauge", statBarScript);
+			ArrayList<IBaseItem> allItems = root.getItems();
 
-		LabelItem popName = root.getLabelById("lblPopulationName");
-		popName.setText(popComp.name);
+			LabelItem popName = root.getLabelById("lblPopulationName");
+			popName.setText(popComp.name);
 
-		LabelItem planetName = root.getLabelById("lblPlanetName");
-		planetName.setText(planetComp.name);
+			LabelItem planetName = root.getLabelById("lblPlanetName");
+			planetName.setText(planetComp.name);
 
-		final Stage stage = new Stage(this.viewport, this.batch);
+			final Stage stage = new Stage(this.viewport, this.batch);
 
-		// set up button animations and listeners
-		CompositeItem btnClose = (CompositeItem) Overlap2DUtil
-				.findItemByIdentifier("btnClose", allItems);
-		Action btnCloseAction = Actions.sequence(getDialogCloseAnimation(),
-				new DialogDisposeAndCallback(stage, null));
-		btnClose.addListener(new CloseDialogClickListener(root, btnCloseAction));
+			// set up button animations and listeners
+			CompositeItem btnClose = (CompositeItem) Overlap2DUtil
+					.findItemByIdentifier("btnClose", allItems);
+			Action btnCloseAction = Actions.sequence(getDialogCloseAnimation(),
+					new DialogDisposeAndCallback(stage, null));
+			btnClose.addListener(new CloseDialogClickListener(root,
+					btnCloseAction));
 
-		this.centerItemInStage(stage, root);
-		pushDialog(stage, root);
+			this.centerItemInStage(stage, root);
+			pushDialog(stage, root);
+		}
 	}
 
 	public void showUnknownPlanetDialog(Entity planetEntity,

@@ -107,11 +107,11 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getFoodNeededPerPerson() {
-			return this.popComp.foodEatenPerPersonPerTurn;
+			return this.popComp.foodEatenPerPerson;
 		}
 
 		public float getRequiredFood() {
-			return this.popComp.foodEatenPerPersonPerTurn
+			return this.popComp.foodEatenPerPerson
 					* this.planetComp.population;
 		}
 

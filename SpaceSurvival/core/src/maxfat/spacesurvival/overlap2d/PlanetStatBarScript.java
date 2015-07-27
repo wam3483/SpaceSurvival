@@ -2,6 +2,7 @@ package maxfat.spacesurvival.overlap2d;
 
 import java.util.ArrayList;
 
+import maxfat.spacesurvival.gamesystem.PopulationRestrictions;
 import maxfat.spacesurvival.rendersystem.TextureActor;
 
 import com.badlogic.gdx.assets.AssetManager;
@@ -9,7 +10,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TiledDrawable;
 import com.uwsoft.editor.renderer.actor.CompositeItem;
 import com.uwsoft.editor.renderer.actor.IBaseItem;
@@ -51,33 +51,32 @@ public class PlanetStatBarScript implements IScript {
 			result = atlas.findRegion("hardinessIcon");
 		return result;
 	}
-	
-	float getProgressFor(CompositeItem item){
+
+	float getProgressFor(CompositeItem item) {
 		String strIcon = item.getCustomVariables().getStringVariable("icon");
 		float progress = 0;
-		if (strIcon.equalsIgnoreCase("DANGER_LEVEL")) {
-			progress = this.attributes.threat;
-		} else if (strIcon.equalsIgnoreCase("PLANET_GOLD")) {
-			progress = this.attributes.coin;
-		} else if (strIcon.equalsIgnoreCase("FOOD")) {
-			progress = this.attributes.food;
-		} else if (strIcon.equalsIgnoreCase("FARMING")) {
-			progress = this.attributes.farming;
+		if (strIcon.equalsIgnoreCase("FARMING")) {
+			progress = PopulationRestrictions.FoodProduction
+					.normalizeValue(this.attributes.farming);
 		} else if (strIcon.equalsIgnoreCase("REPRODUCTION")) {
-			progress = this.attributes.reproduction;
+			progress = PopulationRestrictions.Reproduction
+					.normalizeValue(this.attributes.reproduction);
 		} else if (strIcon.equalsIgnoreCase("HARDINESS")) {
-			progress = this.attributes.hardiness;
+			progress = PopulationRestrictions.Hardiness
+					.normalizeValue(this.attributes.hardiness);
+		} else {
+			throw new RuntimeException("Couldn't get population stat level, unknown attribute type.");
 		}
 		return progress;
 	}
 
 	public static class Attributes {
-		public float threat;
-		public float coin;
-		public float food;
-		public float farming;
-		public float reproduction;
-		public float hardiness;
+		public int threat;
+		public long amountGold;
+		public long amountFood;
+		public int farming;
+		public int reproduction;
+		public int hardiness;
 	}
 
 	private void insertIcon(CompositeItem item) {
@@ -97,9 +96,10 @@ public class PlanetStatBarScript implements IScript {
 				"progressBar", allItems);
 
 		float maxWidth = toReplace.getWidth() * toReplace.getScaleX();
+		System.out.println("PlanetStatBarScript:insertProgressBar: width="
+				+ maxWidth);
 		TiledDrawable bar = new TiledDrawable(myAssets.getStartBar());
-		ProgressBarActor actor = new ProgressBarActor(bar,
-				new TextureRegionDrawable(myAssets.getEndCap()), maxWidth);
+		ProgressBarActor actor = new ProgressBarActor(bar, maxWidth);
 		Overlap2DUtil.replaceElement(toReplace, actor);
 		actor.setColor(Color.GREEN);
 		actor.setProgress(0);

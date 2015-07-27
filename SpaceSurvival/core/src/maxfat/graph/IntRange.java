@@ -1,5 +1,7 @@
 package maxfat.graph;
 
+import com.badlogic.gdx.math.MathUtils;
+
 public class IntRange {
 	private final int min;
 	private final int max;
@@ -13,6 +15,15 @@ public class IntRange {
 
 	public int range() {
 		return this.max - this.min;
+	}
+
+	public float normalizeValue(int value) {
+		value = clamp(value);
+		return (value - min) / (float) max;
+	}
+
+	public int clamp(int value) {
+		return MathUtils.clamp(value, min, max);
 	}
 
 	public int getMin() {

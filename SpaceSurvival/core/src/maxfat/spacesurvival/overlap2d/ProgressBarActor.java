@@ -9,12 +9,10 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 
 public class ProgressBarActor extends Actor {
 	Drawable bar;
-	Drawable endCap;
 	float maxWidth;
 
-	public ProgressBarActor(Drawable bar, Drawable endCap, float maxWidth) {
+	public ProgressBarActor(Drawable bar, float maxWidth) {
 		this.bar = bar;
-		this.endCap = endCap;
 		this.maxWidth = maxWidth;
 	}
 
@@ -37,10 +35,8 @@ public class ProgressBarActor extends Actor {
 		float h = getHeight();
 		float x = getX();
 		float y = getY();
-		float capWidth = endCap.getMinWidth();
-		float barWidth = w - capWidth;
+		float barWidth = w;
 		batch.setColor(this.getColor());
 		this.bar.draw(batch, x, y, barWidth, h);
-		this.endCap.draw(batch, x + barWidth, y, capWidth, h);
 	}
 }

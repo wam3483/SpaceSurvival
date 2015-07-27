@@ -27,7 +27,6 @@ public class Overlap2DUtil {
 	public static IBaseItem findItemByIdentifier(String id,
 			ArrayList<IBaseItem> items) {
 		for (IBaseItem item : items) {
-			System.out.println(item.getDataVO().itemIdentifier);
 			if (item.getDataVO().itemIdentifier.equals(id)) {
 				return item;
 			}

@@ -7,27 +7,34 @@ repeat: none
 hardinessIcon
   rotate: false
   xy: 10, 10
-  size: 32, 32
-  orig: 32, 32
+  size: 35, 35
+  orig: 35, 35
+  offset: 0, 0
+  index: -1
+progressBar
+  rotate: false
+  xy: 157, 29
+  size: 19, 16
+  orig: 19, 16
   offset: 0, 0
   index: -1
 reproductionIcon
   rotate: false
-  xy: 62, 10
+  xy: 65, 13
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 stripe
   rotate: false
-  xy: 114, 22
+  xy: 117, 25
   size: 20, 20
   orig: 20, 20
   offset: 0, 0
   index: -1
 stripeEndCap
   rotate: false
-  xy: 154, 27
+  xy: 196, 30
   size: 20, 15
   orig: 20, 15
   offset: 0, 0

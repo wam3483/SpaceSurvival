@@ -14,8 +14,8 @@ public class TextureActor extends Actor {
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
 		float rotation = this.getRotation();
-		float width = this.region.getRegionWidth();
-		float height = this.region.getRegionHeight();
+		float width = this.getWidth();
+		float height = this.getHeight();
 		batch.setColor(this.getColor());
 		batch.draw(this.region, //
 				getX(), getY(), //

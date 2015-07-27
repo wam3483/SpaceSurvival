@@ -14,7 +14,7 @@ public class MyAssetManager {
 	}
 
 	public TextureRegion getStartBar() {
-		return uiAtlas.findRegion("stripe");
+		return uiAtlas.findRegion("progressBar");
 	}
 
 	public TextureRegion getEndCap() {

@@ -11,6 +11,11 @@ import com.badlogic.gdx.math.MathUtils;
 
 public class PopulationGenerator {
 
+	private final int MinStartingHardiness = 1;
+	final int MinStartFoodProduction = 1;
+	final int MinStartMiningSpeed = 1;
+	final int MinStartReproduction = 1;
+
 	private final PopulationParams params;
 	private final PopulationNameService populationNameGen;
 
@@ -25,6 +30,9 @@ public class PopulationGenerator {
 		PopulationComponent pop = null;
 
 		pop = new PopulationComponent();
+		pop.hardiness = MinStartingHardiness;
+		pop.foodEarnedPerFarmer = MinStartFoodProduction;
+		pop.reproductionRate = MinStartReproduction;
 		pop.extrafoodReproductionBonus = 1f;
 		pop.name = this.populationNameGen.getPopulationName(planetComp, pop);
 
@@ -72,33 +80,49 @@ public class PopulationGenerator {
 			count = (count + 1) % 4;
 		}
 
-		pop.foodEarnedPerFarmer = MathUtils.clamp(pop.foodEarnedPerFarmer,
-				params.foodPerFarmerRange.getMin(),
-				params.foodPerFarmerRange.getMax());
+		pop.foodEarnedPerFarmer = MathUtils
+				.clamp(pop.foodEarnedPerFarmer, this.MinStartFoodProduction,
+						params.foodPerFarmerRange.getMax());
 		pop.hardiness = MathUtils.clamp(pop.hardiness,
-				params.hardinessRange.getMin(), params.hardinessRange.getMax());
-		pop.goldMiningSpeed = MathUtils.clamp(pop.goldMiningSpeed,
-				params.miningSpeedRange.getMin(),
+				this.MinStartingHardiness, params.hardinessRange.getMax());
+		pop.goldMiningSpeed = MathUtils.clamp(pop.goldMiningSpeed, 1,
 				params.miningSpeedRange.getMax());
+		pop.reproductionRate = MathUtils.clamp(pop.reproductionRate,
+				MinStartReproduction, params.reproductionRange.getMax());
 
 		return pop;
 	}
+
+	int total = 0;
+	int count = 0;
 
 	int getTotalPoints() {
 		double gaussian = params.random.nextGaussian();
 		if (gaussian < 0)
 			gaussian *= -1;
 
-		int maxPoints = params.reproductionRange.getMax()
-				+ params.hardinessRange.getMax()
-				+ params.miningSpeedRange.getMax()
-				+ params.foodPerFarmerRange.getMax();
-		
+		int maxPoints = params.reproductionRange.range()
+				- this.MinStartReproduction + params.hardinessRange.range()
+				- this.MinStartingHardiness + params.miningSpeedRange.range()
+				- this.MinStartMiningSpeed + params.foodPerFarmerRange.range()
+				- this.MinStartFoodProduction;
+
 		// around 10% of samples fall outside [1.7, -1.7]
-		// this means ~10% of populations will be maxed
+		// this means ~10% of populations will be 80% from max
+		// and the other 90% can be at best, 50% maxed out.
 		float maxPointsMark = 1.7f;
+		if (gaussian < maxPointsMark) {
+			maxPoints /= 2;
+		} else {
+			// best a native population can get is 80% from max
+			maxPoints = (int) (maxPoints * .8f);
+		}
 		float normal = (float) MathUtils.clamp(gaussian / maxPointsMark, 0, 1);
 		int totalPointsAvailable = (int) (normal * maxPoints);
+		System.out.println("points=" + totalPointsAvailable + " " + gaussian);
+		count++;
+		total += totalPointsAvailable;
+		System.out.println("\taverage = " + (total / (float) count));
 		return totalPointsAvailable;
 	}
 
