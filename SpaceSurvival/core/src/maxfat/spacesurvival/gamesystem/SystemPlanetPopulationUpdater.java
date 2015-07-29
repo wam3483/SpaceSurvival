@@ -71,18 +71,21 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		/**
-		 * Starve chance per person is reduced by .1 for each point of
-		 * hardiness.
+		 * Starve chance per person is reduced by .01 for each point of
+		 * hardiness. Unfed citizens have a 1-10% chance of dying, depending on hardiness.
 		 * 
 		 * @return
 		 */
 		public float getStarvationPercent() {
-			float normalized = 1 - popComp.hardiness
+			float normalizedHardiness = popComp.hardiness
 					/ (float) PopulationRestrictions.Hardiness.range();
+			float normalized = PopulationRestrictions.StarveChance.getMax()
+					- normalizedHardiness;
 			float min = PopulationRestrictions.StarveChance.getMin();
-			float chance = min + normalized
+			float chance = normalized
 					* PopulationRestrictions.StarveChance.range();
-			return chance;
+			chance = Math.max(min, chance);
+			return chance / 10;
 		}
 
 		public float getPercentDeath() {
@@ -111,8 +114,7 @@ public class SystemPlanetPopulationUpdater extends IteratingSystem {
 		}
 
 		public float getRequiredFood() {
-			return this.popComp.foodEatenPerPerson
-					* this.planetComp.population;
+			return this.popComp.foodEatenPerPerson * this.planetComp.population;
 		}
 
 		public float getFoodProduced() {
