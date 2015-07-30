@@ -173,10 +173,12 @@ public class GameUIManager {
 			attr.reproduction = popComp.reproductionRate;
 			attr.amountGold = planetComp.amountGold;
 			attr.amountFood = planetComp.amountFood;
-			
+
 			PlanetStatBarScript statBarScript = new PlanetStatBarScript(
 					this.assetManager, attr);
-			root.addScriptTo("gauge", statBarScript);
+			root.addScriptTo("statBar", statBarScript);
+			root.addScriptTo("gauge", new PopulationPanelScript(
+					this.assetManager, attr));
 			ArrayList<IBaseItem> allItems = root.getItems();
 
 			LabelItem popName = root.getLabelById("lblPopulationName");

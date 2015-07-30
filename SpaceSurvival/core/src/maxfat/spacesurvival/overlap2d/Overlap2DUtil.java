@@ -24,6 +24,15 @@ public class Overlap2DUtil {
 		newItem.setZIndex(zIndex);
 	}
 
+	public static String findCustomVariable(String key, IBaseItem item) {
+		String result = null;
+		while (item != null
+				&& (result = item.getCustomVariables().getStringVariable(key)) == null) {
+			item = item.getParentItem();
+		}
+		return result;
+	}
+
 	public static IBaseItem findItemByIdentifier(String id,
 			ArrayList<IBaseItem> items) {
 		for (IBaseItem item : items) {
