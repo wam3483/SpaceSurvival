@@ -29,8 +29,8 @@ public class PlanetComponentGenerator {
 	public static class PlanetParams {
 		public RandomFloatProvider temperatureProvider;
 		public RandomFloatProvider waterProvider;
-		public RandomIntProvider foodProvider;
-		public RandomIntProvider goldProvider;
+		public IIntProvider foodProvider;
+		public IIntProvider goldProvider;
 		public RandomFloatProvider birthBonusProvider;
 		public RandomFloatProvider currentPopulationProvider;
 		public RandomIntProvider dangerLevelProvider;

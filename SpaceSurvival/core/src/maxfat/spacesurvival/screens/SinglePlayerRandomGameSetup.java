@@ -14,6 +14,7 @@ import maxfat.spacesurvival.game.generator.PlanetNameService;
 import maxfat.spacesurvival.game.generator.PopulationGenerator;
 import maxfat.spacesurvival.game.generator.PopulationNameService;
 import maxfat.spacesurvival.game.generator.RandomFloatProvider;
+import maxfat.spacesurvival.game.generator.RandomIntArrayProvider;
 import maxfat.spacesurvival.game.generator.RandomIntProvider;
 import maxfat.spacesurvival.gamesystem.PlanetRestrictions;
 import maxfat.spacesurvival.gamesystem.PlayerComponent;
@@ -98,8 +99,9 @@ public class SinglePlayerRandomGameSetup {
 				PlanetRestrictions.DangerLevel);
 		planetParams.goldProvider = new RandomIntProvider(random, new IntRange(
 				1000, 100000));
-		planetParams.foodProvider = new RandomIntProvider(random, new IntRange(
-				1000, 10000));
+		planetParams.foodProvider = new RandomIntArrayProvider(new int[] {
+				1000, 2000, 4000, 5000, 10000, 20000, 40000, 50000, 100000,
+				200000 }, random);
 		planetParams.temperatureProvider = new RandomFloatProvider(random, //
 				new FloatRange(GameConstants.PlanetConstants.LivableMinTemp,
 						GameConstants.PlanetConstants.LivableMaxTemp));

@@ -4,7 +4,7 @@ import maxfat.graph.IntRange;
 import maxfat.util.random.IRandom;
 import maxfat.util.random.RandomUtil;
 
-public class RandomIntProvider {
+public class RandomIntProvider implements IIntProvider {
 
 	private final IntRange range;
 	private final IRandom random;
@@ -14,7 +14,7 @@ public class RandomIntProvider {
 		this.range = range;
 	}
 
-	public long getValue() {
+	public int getValue() {
 		return RandomUtil.randomBetweenRanges(this.random, this.range.getMin(),
 				range.getMax());
 	}

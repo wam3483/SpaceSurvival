@@ -186,6 +186,10 @@ public class GameUIManager {
 
 			LabelItem planetName = root.getLabelById("lblPlanetName");
 			planetName.setText(planetComp.name);
+			LabelItem lblFood = root.getLabelById("lblFood");
+			LabelItem lblGold = root.getLabelById("lblGold");
+			lblFood.setText(planetComp.amountFood + "");
+			lblGold.setText(planetComp.amountGold + "");
 
 			final Stage stage = new Stage(this.viewport, this.batch);
 
@@ -199,6 +203,22 @@ public class GameUIManager {
 
 			this.centerItemInStage(stage, root);
 			pushDialog(stage, root);
+		}
+	}
+
+	private String formatUnits(int units) {
+		int thousand = (int) Math.pow(10, 3);
+		int million = thousand * thousand;
+		int billion = million * thousand;
+		if (units >= thousand) {
+			double d = units / (double) thousand;
+			return " K";
+		} else if (units >= million) {
+			return " million";
+		} else if (units >= billion) {
+			return " billion";
+		} else {
+			return units + "";
 		}
 	}
 
