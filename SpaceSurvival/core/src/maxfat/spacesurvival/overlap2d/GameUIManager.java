@@ -157,7 +157,8 @@ public class GameUIManager {
 		frameActor.addAction(action);
 	}
 
-	public void showLimitedInfoPlanetDialog(Entity planetEntity) {
+	public void showLimitedInfoPlanetDialog(Entity planetEntity,
+			final ICallback<IDialog> claimPlanet) {
 		this.sceneLoader.loadScene("PlanetLimitedInfoDialog");
 		final CompositeItem root = sceneLoader.getRoot();
 
@@ -179,6 +180,7 @@ public class GameUIManager {
 			root.addScriptTo("statBar", statBarScript);
 			root.addScriptTo("gauge", new PopulationPanelScript(
 					this.assetManager, attr));
+			root.addScriptTo("SimpleButton", new SimpleButtonScript());
 			ArrayList<IBaseItem> allItems = root.getItems();
 
 			LabelItem popName = root.getLabelById("lblPopulationName");
@@ -188,8 +190,8 @@ public class GameUIManager {
 			planetName.setText(planetComp.name);
 			LabelItem lblFood = root.getLabelById("lblFood");
 			LabelItem lblGold = root.getLabelById("lblGold");
-			lblFood.setText(planetComp.amountFood + "");
-			lblGold.setText(planetComp.amountGold + "");
+			lblFood.setText(formatUnits(planetComp.amountFood));
+			lblGold.setText(formatUnits(planetComp.amountGold));
 
 			final Stage stage = new Stage(this.viewport, this.batch);
 
@@ -201,25 +203,47 @@ public class GameUIManager {
 			btnClose.addListener(new CloseDialogClickListener(root,
 					btnCloseAction));
 
+			CompositeItem btnClaimPlanet = (CompositeItem) Overlap2DUtil
+					.findItemByIdentifier("btnClaimPlanet", allItems);
+			btnClaimPlanet.addListener(new ClickListener() {
+				@Override
+				public void touchUp(InputEvent event, float x, float y,
+						int pointer, int button) {
+					Action closeAction = new DialogDisposeAndCallback(stage,
+							null);
+					claimPlanet.callback(new CompositeItemDialog(root,
+							closeAction));
+				}
+			});
+
 			this.centerItemInStage(stage, root);
 			pushDialog(stage, root);
 		}
 	}
 
-	private String formatUnits(int units) {
+	private String formatUnits(long value) {
 		int thousand = (int) Math.pow(10, 3);
 		int million = thousand * thousand;
 		int billion = million * thousand;
-		if (units >= thousand) {
-			double d = units / (double) thousand;
-			return " K";
-		} else if (units >= million) {
-			return " million";
-		} else if (units >= billion) {
-			return " billion";
-		} else {
-			return units + "";
+		String units = "";
+		double result = value;
+		if (value < thousand) {
+			//
+		} else if (value >= billion) {
+			result /= billion;
+			units = "billion";
+		} else if (value >= million) {
+			result /= million;
+			units = "million";
+		} else if (value >= thousand) {
+			result /= thousand;
+			units = "K";
 		}
+		String formatted = String.format("%.1f", result);
+		if (formatted.charAt(formatted.length() - 1) == '0') {
+			formatted = formatted.substring(0, formatted.length() - 2);
+		}
+		return formatted + " " + units;
 	}
 
 	public void showUnknownPlanetDialog(Entity planetEntity,

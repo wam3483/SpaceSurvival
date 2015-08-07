@@ -133,7 +133,7 @@ progressBackdrop
   rotate: false
   xy: 388, 377
   size: 24, 24
-  split: 8, 15, 11, 11
+  split: 11, 12, 11, 11
   orig: 24, 24
   offset: 0, 0
   index: -1

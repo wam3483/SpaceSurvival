@@ -10,7 +10,13 @@ import com.uwsoft.editor.renderer.actor.ImageItem;
 
 public class Overlap2DUtil {
 
-	public static void replaceElement(ImageItem placeholder, Actor newItem) {
+	public static void replaceElement(ArrayList<IBaseItem> items,
+			String itemIdToReplace, Actor newItem) {
+		Actor actor = (Actor)findItemByIdentifier(itemIdToReplace,items);
+		replaceElement(actor, newItem);
+	}
+
+	public static void replaceElement(Actor placeholder, Actor newItem) {
 		float x = placeholder.getX();
 		float y = placeholder.getY();
 		int zIndex = placeholder.getZIndex();
