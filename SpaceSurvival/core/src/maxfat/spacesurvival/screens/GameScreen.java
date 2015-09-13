@@ -21,8 +21,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -120,6 +118,13 @@ public class GameScreen implements Screen {
 			} else if (player.hasLimitedKnowledgeOfPlanet(entity)) {
 				// display limited planet info.
 				// population name, planet stats, planet name.
+				ICallback<IDialog> claimPlanetCallback = new ICallback<IDialog>() {
+					@Override
+					public void callback(IDialog scanPlanetDialog) {
+						scanPlanetDialog.close();
+					}
+				};
+				gameUI.showLimitedInfoPlanetDialog(entity, claimPlanetCallback);
 			} else if (player.canPlayerScanPlanet(entity)) {
 				// option to remotely scan planet.
 				Runnable scanPlanetRunnable = new Runnable() {
@@ -161,9 +166,8 @@ public class GameScreen implements Screen {
 						scanPlanetDialog.close();
 					}
 				};
-				gameUI.showLimitedInfoPlanetDialog(entity);
-//				gameUI.showUnknownPlanetDialog(entity, scanPlanetRunnable,
-//						claimPlanetCallback);
+				gameUI.showUnknownPlanetDialog(entity, scanPlanetRunnable,
+						claimPlanetCallback);
 			}
 		}
 

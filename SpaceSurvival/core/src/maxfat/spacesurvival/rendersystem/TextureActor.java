@@ -9,6 +9,8 @@ public class TextureActor extends Actor {
 
 	public TextureActor(TextureRegion region) {
 		this.region = region;
+		this.setWidth(this.region.getRegionWidth());
+		this.setHeight(this.region.getRegionHeight());
 	}
 
 	@Override
@@ -17,10 +19,14 @@ public class TextureActor extends Actor {
 		float width = this.getWidth();
 		float height = this.getHeight();
 		batch.setColor(this.getColor());
+		float x = getX();
+		float y = getY();
+		float scaleX = getScaleX();
+		float scaleY = getScaleY();
 		batch.draw(this.region, //
-				getX(), getY(), //
+				x, y, //
 				width / 2, height / 2, //
 				width, height,//
-				getScaleX(), getScaleY(), rotation);
+				scaleX, scaleY, rotation);
 	}
 }

@@ -9,7 +9,7 @@ public class PlanetComponent extends Component {
 	public String name;
 	private final Vector2 position;
 
-	public float scanTime = 1;
+	public float scanTime = 30;
 	public float population;
 	public float farmingPopulation;
 
